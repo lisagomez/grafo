@@ -12,7 +12,6 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 // Import Routes
 import authRoutes from './routes/auth.js';
-import permissionsRoutes from './routes/permissions.js';
 
 const app = express();
 
@@ -56,7 +55,6 @@ app.get('/health', (req, res) => {
 const apiRouter = express.Router();
 
 apiRouter.use('/auth', authRoutes);
-apiRouter.use('/permissions', permissionsRoutes);
 
 app.use(config.apiPrefix, apiRouter);
 

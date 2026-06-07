@@ -70,14 +70,14 @@ const recentActivity: RecentActivity[] = [
   {
     id: '2',
     user: 'Mike Johnson',
-    action: 'Created new workspace',
+    action: 'Registró un nuevo cliente',
     timestamp: '15 minutes ago',
     avatar: 'MJ',
   },
   {
     id: '3',
     user: 'Emily Davis',
-    action: 'Invited 3 team members',
+    action: 'Generó un dictamen de deducibilidad',
     timestamp: '1 hour ago',
     avatar: 'ED',
   },
@@ -91,7 +91,7 @@ const recentActivity: RecentActivity[] = [
   {
     id: '5',
     user: 'Jordan Lee',
-    action: 'Updated billing info',
+    action: 'Exportó un Reporte de Sustento',
     timestamp: '3 hours ago',
     avatar: 'JL',
   },

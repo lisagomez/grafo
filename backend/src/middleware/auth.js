@@ -83,38 +83,6 @@ export const requireRoles = (...roles) => {
 };
 
 /**
- * Check if user is workspace member
- */
-export const requireWorkspaceMember = asyncHandler(async (req, res, next) => {
-  const { workspaceId } = req.params;
-  
-  if (!workspaceId) {
-    throw HttpErrors.badRequest('Workspace ID required');
-  }
-
-  // In production, check database for membership
-  // For now, we'll pass through
-  req.workspaceId = workspaceId;
-  next();
-});
-
-/**
- * Check if user is workspace admin
- */
-export const requireWorkspaceAdmin = asyncHandler(async (req, res, next) => {
-  const { workspaceId } = req.params;
-  
-  if (!workspaceId) {
-    throw HttpErrors.badRequest('Workspace ID required');
-  }
-
-  // In production, check database for admin role
-  // For now, we'll pass through
-  req.workspaceId = workspaceId;
-  next();
-});
-
-/**
  * Generate JWT tokens
  */
 export const generateTokens = (user) => {
@@ -141,8 +109,6 @@ export default {
   authenticate,
   optionalAuth,
   requireRoles,
-  requireWorkspaceMember,
-  requireWorkspaceAdmin,
   generateTokens,
 };
 

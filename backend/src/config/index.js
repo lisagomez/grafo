@@ -74,19 +74,7 @@ export const config = {
     from: process.env.FROM_EMAIL || 'noreply@example.com',
   },
   
-  // Workspaces
-  workspaces: {
-    maxPerUser: parseInt(process.env.MAX_WORKSPACES_PER_USER, 10) || 5,
-    defaultName: process.env.DEFAULT_WORKSPACE_NAME || 'My Workspace',
-  },
-  
-  // Teams
-  teams: {
-    maxMembers: parseInt(process.env.MAX_TEAM_MEMBERS, 10) || 50,
-    inviteExpiryDays: parseInt(process.env.INVITE_EXPIRY_DAYS, 10) || 7,
-  },
-  
-  // Permissions
+  // Roles por defecto
   permissions: {
     defaultRole: process.env.DEFAULT_ROLE || 'member',
     superAdminEmail: process.env.SUPER_ADMIN_EMAIL,

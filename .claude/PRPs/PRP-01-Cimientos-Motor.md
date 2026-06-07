@@ -70,7 +70,13 @@ Grafo resuelve la **asimetría de información fiscal**: un Contador Público Se
 
 **Arquitectura (declaración explícita):** el proyecto usa una organización **layer-based** (`backend/src/{lib,services,routes,middleware,config}`), **NO Feature-First**. El Golden Path Feature-First + Supabase + Next 16 del template genérico SaaS Factory (`prp-base.md`) **no aplica** a este proyecto. La fuente de verdad arquitectónica es este PRP + `CLAUDE.md`, no `prp-base.md`.
 
-**Scaffold genérico — eliminado (2026-06-07):** se **removieron** las rutas/componentes de `workspaces`, `teams` y `billing` (backend `routes/*` + frontend `app/dashboard/*` + `WorkspaceContext` en `providers.tsx` + métodos en `lib/api.ts`). Quedan solo **`auth` base** y `permissions` registrados en `index.js`. El concepto `workspace` se sustituye por `Cliente`/cartera del despacho (Fase 3); `dictamen`/`consulta`/`grafo` llegan en Fase 3/5. **Prisma:** modelos `Workspace/WorkspaceMember/Invite/Subscription` **eliminados** de `schema.prisma` (quedan `User` + `AuditLog`; `prisma format` ✅). Migración para dropear las tablas queda **pendiente** hasta que exista una BD. **Aún presentes (fuera de scope):** middleware `requireWorkspace*` en `auth.js` y `routes/permissions.js` (RBAC `workspace:*`) — `permissions` es scaffold acoplado a workspace y puede revisarse después.
+**Scaffold genérico — eliminación total (2026-06-07). El sistema es Fiscal-First, no Multi-tenant.** Se removieron por completo `workspaces`, `teams`, `billing` **y** `permissions`:
+- **Backend:** borradas `routes/{workspaces,teams,billing,permissions}.js`; `index.js` solo registra **`auth`**. Eliminado el middleware `requireWorkspaceMember`/`requireWorkspaceAdmin` de `auth.js` y los bloques `workspaces`/`teams` de `config/index.js`.
+- **Frontend:** borradas `app/dashboard/{workspaces,teams,billing}`; `WorkspaceContext` desmontado de `providers.tsx`; nav/switcher de `DashboardLayout`; `lib/api.ts` sin clientes genéricos. Copy de landing/dashboard reescrito a dominio fiscal (clientes, dictamen, expedientes).
+- **Prisma:** modelos `Workspace/WorkspaceMember/Invite/Subscription` eliminados de `schema.prisma` (quedan `User` + `AuditLog`; `prisma format`/`validate` ✅). Migración de drop pendiente hasta que exista BD.
+- **Validación:** `npm run build` (frontend) **compila limpio** (10/10 páginas, TS+lint OK); backend `node --check` OK.
+
+El concepto `workspace` se sustituye por `Cliente`/cartera del despacho (Fase 3); `dictamen`/`consulta`/`grafo` llegan en Fase 3/5.
 
 ### División de responsabilidades de datos
 | Capa | Tecnología | Responsabilidad |

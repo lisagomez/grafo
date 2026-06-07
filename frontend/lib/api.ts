@@ -147,6 +147,5 @@ export const authApi = {
     api.post<ApiResponse<void>>('/auth/reset-password', { token, password }),
 };
 
-// workspaces/teams/billing API endpoints eliminados (scaffold genérico removido).
-// El dominio fiscal (clientes, dictamen, consulta) se añadirá en Fase 3/5.
+// Endpoints de dominio fiscal (clientes, dictamen, consulta) — se añadirán en Fase 3/5.
 

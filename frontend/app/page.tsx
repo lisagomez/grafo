@@ -10,18 +10,18 @@ export default function HomePage() {
     },
     {
       icon: CreditCard,
-      title: 'Payments',
-      description: 'Stripe-powered billing with subscriptions and invoicing.',
+      title: 'Dictamen Fiscal',
+      description: 'Veredicto de deducibilidad con ruta legal trazable y sustento exportable.',
     },
     {
       icon: Building2,
-      title: 'Multi-tenant',
-      description: 'Workspaces with isolated data and flexible permissions.',
+      title: 'Clientes del Despacho',
+      description: 'Gestiona la cartera de clientes y sus regímenes fiscales.',
     },
     {
       icon: Users,
-      title: 'Team Management',
-      description: 'Invite team members, manage roles, and collaborate.',
+      title: 'Expedientes',
+      description: 'Organiza expedientes, consultas y dictámenes por cliente.',
     },
     {
       icon: BarChart3,
