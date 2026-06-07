@@ -20,12 +20,13 @@ Cuándo consultar qué, antes de escribir código:
 1. **¿Feature compleja / cambio multi-archivo?** → Lee el PRP correspondiente en `.claude/PRPs/` ANTES de implementar. Genera uno nuevo con el skill `/prp` si no existe.
    - **[PRP-01: Motor de Inteligencia Fiscal](.claude/PRPs/01-motor-legal.md)** — arquitectura completa: Neo4j+Cypher, sync bidireccional Obsidian, Legal Context Resolver (multi-jurisdicción), capa de voz, blindaje (HITL / lineage / contradicción) e interoperabilidad A2A. **Estado: EN PROGRESO** (Fase 3 parcial: `LegalSourceProvider` en `backend/src/lib/legal/sources/`).
 2. **¿Implementar una fase ya planificada del PRP?** → skill `/bucle-agentico` (ejecuta fase por fase con mapeo de contexto just-in-time).
-3. **¿Toca el grafo legal (normas/relaciones/inferencia)?** → todo Cypher pasa por el **Cypher Query Service** (`backend/src/lib/graph/cypherService.js`). Nunca queries dispersas.
+3. **¿Toca el grafo legal (normas/relaciones/inferencia)?** → **OBLIGATORIO: lee primero [`.claude/memory/BUSINESS_LOGIC.md`](.claude/memory/BUSINESS_LOGIC.md)** (reglas de deducibilidad, entidades y flujos de decisión) ANTES de escribir o ejecutar cualquier query de Cypher. Luego, todo Cypher pasa por el **Cypher Query Service** (`backend/src/lib/graph/cypherService.js`). Nunca queries dispersas.
 4. **¿Nueva jurisdicción/país?** → crear un `LegalSourceProvider` y registrarlo en la factory (`backend/src/lib/legal/sources/index.js`). No tocar el motor (patrón Strategy).
 5. **¿Auth / pagos / emails / mobile?** → skills `/add-login`, `/add-payments`, `/add-emails`, `/add-mobile`.
 
 ## Reglas críticas (ver Anti-Patrones del PRP-01)
 
+- **Antes de cualquier Cypher**: consultar [`.claude/memory/BUSINESS_LOGIC.md`](.claude/memory/BUSINESS_LOGIC.md) (lógica de dominio fiscal).
 - Cypher centralizado; namespace de país viaja como **parámetro**, nunca concatenado.
 - Sin **lineage** no hay `Deducible` (path vacío ⇒ `Condicional`).
 - Export de PDF **bloqueado** sin validación humana (gate 409).
