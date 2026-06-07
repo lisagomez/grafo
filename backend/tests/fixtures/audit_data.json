@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "nombre": "Dataset de auditoría",
+    "descripcion": "Grafo con errores deliberados para probar el GraphAuditor: un gasto sin norma (huérfano), un gasto cuya única norma está derogada (huérfano por fecha), y normas con inconsistencias de source_version/vigencia.",
+    "pais": "MX"
+  },
+
+  "regimenes": [
+    { "clave": "PM_TITULO_II", "pais": "MX", "nombre": "PM Título II", "fuente": "u", "source_version": "LISR_2024" }
+  ],
+
+  "gastos": [
+    { "clave": "VIATICOS", "pais": "MX", "nombre": "Viáticos", "fuente": "u", "source_version": "LISR_2024" },
+    { "clave": "DONATIVOS", "pais": "MX", "nombre": "Donativos", "fuente": "u", "source_version": "LISR_2024" },
+    { "clave": "COMBUSTIBLES", "pais": "MX", "nombre": "Combustibles", "fuente": "u", "source_version": "LISR_2024" }
+  ],
+
+  "normas": [
+    {
+      "id": "N-VIATICOS-2024", "pais": "MX", "tipo": "ARTICULO", "clave": "Art. 28-V (2024)",
+      "fuente_url": "u", "vigente_desde": "2024-01-01", "vigente_hasta": null, "source_version": "LISR_2024"
+    },
+    {
+      "id": "N-COMB-VENCIDA", "pais": "MX", "tipo": "ARTICULO", "clave": "Art. 28-II (combustibles, vencida)",
+      "fuente_url": "u", "vigente_desde": "2018-01-01", "vigente_hasta": "2020-12-31", "source_version": "LISR_2018"
+    },
+    {
+      "id": "N-MAL-VENTANA", "pais": "MX", "tipo": "ARTICULO", "clave": "Norma con ventana inválida",
+      "fuente_url": "u", "vigente_desde": "2025-01-01", "vigente_hasta": "2023-12-31", "source_version": "LISR_2025"
+    }
+  ],
+
+  "criterios": [],
+
+  "relaciones": [
+    { "tipo": "APLICA_A", "fromKey": "id", "fromVal": "N-VIATICOS-2024", "toKey": "clave", "toVal": "VIATICOS",
+      "props": { "regimen": "PM_TITULO_II", "veredicto_base": "CONDICIONAL", "source_version": "LISR_2023" } },
+    { "tipo": "APLICA_A", "fromKey": "id", "fromVal": "N-COMB-VENCIDA", "toKey": "clave", "toVal": "COMBUSTIBLES",
+      "props": { "regimen": "PM_TITULO_II", "veredicto_base": "CONDICIONAL", "source_version": "LISR_2018" } }
+  ]
+}

@@ -71,3 +71,11 @@ export const DETECTAR_CONTRADICCIONES = /* cypher */ `
   WHERE viva.vigente_hasta IS NULL AND viva.pais = $pais
   RETURN viva.id AS id, viva.clave AS clave
 `;
+
+/** Dump del grafo (nodos + relaciones) de un país, para auditoría/export. */
+export const EXPORT_GRAFO = /* cypher */ `
+  MATCH (n) WHERE n.pais = $pais
+  OPTIONAL MATCH (n)-[r]->(m) WHERE m.pais = $pais
+  RETURN collect(DISTINCT n) AS nodos,
+         collect(DISTINCT { tipo: type(r), desde: startNode(r), hacia: endNode(r), props: r }) AS relaciones
+`;

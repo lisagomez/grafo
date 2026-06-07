@@ -20,6 +20,7 @@
  * @property {boolean} isMock
  * @property {(args: { gasto: string, regimen: string, pais: string }) => Promise<CadenaLegal|null>} getCadenaLegal
  * @property {(pais: string) => Promise<Array<{id:string, clave:string}>>} detectarContradicciones
+ * @property {(pais: string) => Promise<Object>} exportGrafo  Dump del grafo (para auditoría/export).
  */
 
 import * as cypherService from './cypherService.js';
@@ -39,6 +40,33 @@ export class RealNeo4jService {
   /** @param {string} pais */
   detectarContradicciones(pais) {
     return cypherService.detectarContradicciones(pais);
+  }
+
+  /**
+   * Dump del grafo de un país en el shape del dataset (regimenes/gastos/normas/criterios/relaciones).
+   * @param {string} pais
+   */
+  async exportGrafo(pais) {
+    const { runQuery } = await import('../neo4j.js');
+    const { EXPORT_GRAFO } = await import('./cypherQueries.js');
+    const records = await runQuery(EXPORT_GRAFO, { pais });
+    const out = { regimenes: [], gastos: [], normas: [], criterios: [], relaciones: [] };
+    if (records.length === 0) return out;
+    const grupo = { Regimen: 'regimenes', Gasto: 'gastos', Norma: 'normas', Criterio: 'criterios' };
+    for (const n of records[0].get('nodos') || []) {
+      const key = grupo[n.labels?.[0]];
+      if (key) out[key].push({ ...n.properties });
+    }
+    for (const r of records[0].get('relaciones') || []) {
+      if (!r.tipo) continue;
+      out.relaciones.push({
+        tipo: r.tipo,
+        fromVal: r.desde?.properties?.id ?? r.desde?.properties?.clave,
+        toVal: r.hacia?.properties?.id ?? r.hacia?.properties?.clave,
+        props: r.props?.properties ?? {},
+      });
+    }
+    return out;
   }
 }
 
@@ -114,6 +142,18 @@ export class MockNeo4jService {
     return (this.data.normas || [])
       .filter((n) => n.pais === pais && n.vigente_hasta == null && derogadas.has(n.id))
       .map((n) => ({ id: n.id, clave: n.clave }));
+  }
+
+  /** @param {string} pais  Devuelve el dataset filtrado por país (mismo shape del seed). */
+  async exportGrafo(pais) {
+    const filtra = (arr) => (arr || []).filter((x) => !x.pais || x.pais === pais);
+    return {
+      regimenes: filtra(this.data.regimenes),
+      gastos: filtra(this.data.gastos),
+      normas: filtra(this.data.normas),
+      criterios: filtra(this.data.criterios),
+      relaciones: this.data.relaciones || [],
+    };
   }
 }
 

@@ -10,6 +10,7 @@
     "test": "node --test tests/",
     "seed:graph": "node scripts/seed-graph.js",
     "test:inference": "node scripts/test-inference.js",
+    "audit": "node scripts/audit.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
