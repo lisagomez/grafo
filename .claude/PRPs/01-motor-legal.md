@@ -1,7 +1,10 @@
-# PRP.md — Grafo: Motor de Inteligencia Fiscal
+# PRP-01: Motor de Inteligencia Fiscal (Grafo)
 
-> Product Requirements Proposal · Generado por SaaS Factory · Fecha: 2026-06-07
-> Plan de implementación aprobado. La Fase 3 (LegalSourceProvider / Strategy) está parcialmente implementada en `backend/src/lib/legal/sources/`.
+> **Estado**: EN PROGRESO
+> **Fecha**: 2026-06-07
+> **Proyecto**: grafo
+> **Blueprint**: ver sección [MVP Roadmap (fases)](#mvp-roadmap-fases). Implementación fase por fase con el skill `/bucle-agentico`.
+> **Avance**: Fase 3 parcial — `LegalSourceProvider` (Strategy) implementado en `backend/src/lib/legal/sources/`.
 
 ---
 
@@ -383,3 +386,39 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 4. **Conflictos de sync:** política por defecto `vault-wins` (la edición humana en Obsidian gana) vs. `graph-wins`.
 5. **Capa de Voz:** ¿entra en V1 (Fase 7) o se difiere a V2? Añade dependencia de `OPENAI_API_KEY` y de un worker Redis corriendo. Recomendado: dejar el formulario estructurado como camino principal de V1 y la voz como fast-follow una vez validado el motor de dictamen.
 6. **Proveedor NLP de extracción de entidades:** OpenAI vs. Claude (Anthropic) vs. OpenRouter — configurable; STT fijo en Whisper.
+
+---
+
+## 🧠 Aprendizajes (Self-Annealing)
+
+> Crece con cada error/decisión no obvia durante la implementación.
+
+### 2026-06-07: El backend es JS/ESM, no TypeScript ni Supabase
+- **Error/contexto**: El skill y el template asumen Next.js 16 + React 19 + Supabase + TypeScript (Golden Path). El scaffold real es **Express + Prisma + PostgreSQL + JWT** (backend JS/ESM) y **Next 14 + React 18** en el frontend.
+- **Fix**: No migrar. Se añade Neo4j (grafo) y Obsidian (conocimiento) sobre el stack existente. Los contratos de interfaz se expresan con **JSDoc `@typedef` / `@implements`**, no con `.ts`.
+- **Aplicar en**: cualquier módulo nuevo del backend → seguir el patrón `Router`+Zod+`asyncHandler` y JSDoc, no introducir toolchain TS.
+
+### 2026-06-07: PRP/BUSINESS_LOGIC no se materializan solos
+- **Error**: el contenido del plan vivía solo en `~/.claude/plans/`; `PRP.md` y `BUSINESS_LOGIC.md` no existían en el repo.
+- **Fix**: materializar explícitamente los documentos en el repo y versionarlos.
+
+---
+
+## Gotchas
+
+- [ ] **Cypher centralizado**: ninguna query fuera del Cypher Query Service (regla de oro). Evita inyección y dispersión.
+- [ ] **Namespace por país viaja como parámetro**, nunca concatenado al Cypher.
+- [ ] **Identidad por `id` (UUID)** en el sync Obsidian — nunca por nombre de archivo.
+- [ ] **Neo4j y Redis** requieren `docker compose up` antes de seed/inferencia/voz.
+- [ ] **A2A es solo lectura**: no debe mutar el grafo.
+
+## Anti-Patrones
+
+- NO exponer Neo4j/Cypher al exterior (siempre vía A2A Adapter / Cypher Service).
+- NO generar un `Deducible` sin lineage (B2): path vacío ⇒ `Condicional`.
+- NO permitir export de PDF sin validación humana (B1, gate 409).
+- NO acoplar el motor de inferencia a un país, protocolo o proveedor de IA concretos (Strategy/Adapter en todos los bordes).
+
+---
+
+*PRP en progreso. Implementación fase por fase vía `/bucle-agentico`.*
