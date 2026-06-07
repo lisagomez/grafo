@@ -4,7 +4,10 @@
 > **Fecha**: 2026-06-07
 > **Proyecto**: grafo
 > **Blueprint**: ver sección [MVP Roadmap (fases)](#mvp-roadmap-fases). Implementación fase por fase con el skill `/bucle-agentico`.
-> **Avance**: Fase 3 parcial — `LegalSourceProvider` (Strategy) implementado en `backend/src/lib/legal/sources/`.
+> **Avance**:
+> - ✅ **Fase 0 (Cimientos)** — completada en *Modo Arquitecto*: driver Neo4j, config, `.env.example`, schema de constraints.
+> - ✅ **Fase 1 (Grafo + Motor)** — completada en *Modo Arquitecto*: Cypher Query Service, `Neo4jService` (mock inyectable), `InferenceEngine` (DI por constructor), seed con `source_version` + validador de procedencia, fixture "Triángulo Fiscal" y suite `node:test` (11/11). **Pendiente**: ejecución contra una instancia Neo4j real (sin Docker en el entorno actual).
+> - 🚧 **Fase 3** parcial — `LegalSourceProvider` (Strategy) en `backend/src/lib/legal/sources/`.
 
 ---
 
@@ -278,7 +281,7 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 
 ## MVP Roadmap (fases)
 
-### Fase 0 — Cimientos (Neo4j + Prisma + config)
+### Fase 0 — Cimientos (Neo4j + Prisma + config) ✅ Completada (Modo Arquitecto)
 - `docker-compose.yml` con servicio Neo4j (5.x, puertos 7474/7687) y volumen.
 - Backend: dependencia `neo4j-driver`; singleton `backend/src/lib/neo4j.js` (driver + helper `runQuery`). Singleton Prisma `backend/src/lib/prisma.js`.
 - Extender `backend/src/config/index.js`: bloque `neo4j {uri,user,password}` y `obsidian {vaultPath,apiUrl,apiToken,mode}`.
@@ -292,7 +295,7 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 - `Dictamen` — `id, consultaId(unique), veredicto(enum DEDUCIBLE|NO_DEDUCIBLE|CONDICIONAL), rutaLegalJson(lineage), sustentoJson, pais, sourceVersion, estadoValidacion(enum PENDIENTE|VALIDADO|RECHAZADO), validadoPor?, validadoEn?, motivoRechazo?, pdfPath?, createdAt`.
 - `FuentePais` — `id, pais(ISO-2), fuentes(String[] p.ej. ['LISR','CFF','Criterios_SAT_2026']), version, actualizadoEn` (registro de Fuentes de Verdad por jurisdicción).
 
-### Fase 1 — Estructura del grafo + seed (empezar aquí, por petición)
+### Fase 1 — Estructura del grafo + seed (empezar aquí, por petición) ✅ Completada (Modo Arquitecto)
 - `backend/src/lib/graph/schema.cypher` — constraints e índices (un constraint por label sobre `id`; `clave` único en `:Gasto`/`:Regimen`).
 - `backend/src/lib/graph/cypherQueries.js` — strings Cypher parametrizados (constantes nombradas). `backend/src/lib/graph/cypherService.js` — Cypher Query Service (API de negocio sobre el driver).
 - `backend/scripts/seed-graph.js` + `backend/seed/normas_titulo_ii.json` — dataset curado para PM Título II (`:Gasto`: Viáticos, Servicios Profesionales, Equipo de Cómputo, Donativos, Intereses, etc.) con `:Norma`, `:Criterio`, vigencias y relaciones reales. El seed carga vía `cypherService.upsertNorma/mergeRelacion`.
@@ -401,6 +404,11 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 ### 2026-06-07: PRP/BUSINESS_LOGIC no se materializan solos
 - **Error**: el contenido del plan vivía solo en `~/.claude/plans/`; `PRP.md` y `BUSINESS_LOGIC.md` no existían en el repo.
 - **Fix**: materializar explícitamente los documentos en el repo y versionarlos.
+
+### 2026-06-07: Lógica de negocio testeable sin infraestructura
+- **Error/contexto**: el entorno no tiene Docker ni Neo4j; el seed y la inferencia no podían ejecutarse contra una DB real.
+- **Fix**: `Neo4jService` con patrón mock inyectable (`MockNeo4jService` carga JSON/fixtures) + `InferenceEngine` con DI por constructor + `node:test` nativo (sin deps). La lógica se valida hoy con mocks y corre igual contra Neo4j mañana.
+- **Aplicar en**: todo motor/servicio nuevo → depender de una interfaz inyectable, no de la infraestructura concreta. Ver [`.claude/memory/arquitectura-resiliente.md`](../memory/arquitectura-resiliente.md).
 
 ---
 

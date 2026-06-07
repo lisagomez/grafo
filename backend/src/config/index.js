@@ -20,7 +20,18 @@ export const config = {
   
   // Database
   databaseUrl: process.env.DATABASE_URL,
-  
+
+  // Neo4j (grafo legal)
+  neo4j: {
+    uri: process.env.NEO4J_URI || 'bolt://localhost:7687',
+    user: process.env.NEO4J_USER || 'neo4j',
+    password: process.env.NEO4J_PASSWORD || 'neo4j',
+    database: process.env.NEO4J_DATABASE || 'neo4j',
+  },
+
+  // Jurisdicción por defecto (Legal Context Resolver)
+  defaultCountry: process.env.DEFAULT_COUNTRY || 'MX',
+
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   

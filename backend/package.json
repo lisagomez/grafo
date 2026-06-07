@@ -7,6 +7,9 @@
     "start": "node src/index.js",
     "build": "echo 'No build step required for Node.js'",
     "lint": "eslint src/",
+    "test": "node --test tests/",
+    "seed:graph": "node scripts/seed-graph.js",
+    "test:inference": "node scripts/test-inference.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
@@ -21,6 +24,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "neo4j-driver": "^6.1.0",
     "nodemailer": "^6.9.9",
     "stripe": "^14.14.0",
     "uuid": "^9.0.1",
@@ -32,4 +36,3 @@
     "prisma": "^5.9.1"
   }
 }
-

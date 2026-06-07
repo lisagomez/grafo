@@ -1,0 +1,54 @@
+{
+  "_meta": {
+    "nombre": "Triángulo Fiscal",
+    "descripcion": "Tres versiones temporales de la misma norma de viáticos (2023/2024/2025) con ventanas de vigencia que no se solapan. Sirve para validar que el motor selecciona EXCLUSIVAMENTE la versión vigente a la fecha de la consulta.",
+    "pais": "MX",
+    "regimen": "PM_TITULO_II",
+    "_disclaimer": "DATOS DE PRUEBA. Vigencias y claves son sintéticas para el test, no fuente oficial."
+  },
+
+  "regimenes": [
+    { "clave": "PM_TITULO_II", "pais": "MX", "nombre": "Personas Morales - Título II", "fuente": "https://example/lisr", "source_version": "LISR_2024" }
+  ],
+
+  "gastos": [
+    { "clave": "VIATICOS", "pais": "MX", "nombre": "Viáticos", "descripcion": "Gastos de viaje", "fuente": "https://example/lisr", "source_version": "LISR_2024" }
+  ],
+
+  "normas": [
+    {
+      "id": "N-LISR-2023", "pais": "MX", "tipo": "ARTICULO", "clave": "Art. 28-V LISR (2023)",
+      "titulo": "Viáticos — versión 2023", "texto": "Reglas de viáticos vigentes durante 2023.",
+      "fuente_url": "https://example/lisr/2023#art28", "vigente_desde": "2023-01-01", "vigente_hasta": "2023-12-31",
+      "source_version": "LISR_2023"
+    },
+    {
+      "id": "N-LISR-2024", "pais": "MX", "tipo": "ARTICULO", "clave": "Art. 28-V LISR (2024)",
+      "titulo": "Viáticos — versión 2024", "texto": "Reglas de viáticos vigentes durante 2024.",
+      "fuente_url": "https://example/lisr/2024#art28", "vigente_desde": "2024-01-01", "vigente_hasta": "2024-12-31",
+      "source_version": "LISR_2024"
+    },
+    {
+      "id": "N-LISR-2025", "pais": "MX", "tipo": "ARTICULO", "clave": "Art. 28-V LISR (2025)",
+      "titulo": "Viáticos — versión 2025", "texto": "Reglas de viáticos vigentes desde 2025.",
+      "fuente_url": "https://example/lisr/2025#art28", "vigente_desde": "2025-01-01", "vigente_hasta": null,
+      "source_version": "LISR_2025"
+    }
+  ],
+
+  "criterios": [],
+
+  "relaciones": [
+    { "tipo": "APLICA_A", "fromKey": "id", "fromVal": "N-LISR-2023", "toKey": "clave", "toVal": "VIATICOS",
+      "props": { "regimen": "PM_TITULO_II", "veredicto_base": "CONDICIONAL", "source_version": "LISR_2023" } },
+    { "tipo": "APLICA_A", "fromKey": "id", "fromVal": "N-LISR-2024", "toKey": "clave", "toVal": "VIATICOS",
+      "props": { "regimen": "PM_TITULO_II", "veredicto_base": "CONDICIONAL", "source_version": "LISR_2024" } },
+    { "tipo": "APLICA_A", "fromKey": "id", "fromVal": "N-LISR-2025", "toKey": "clave", "toVal": "VIATICOS",
+      "props": { "regimen": "PM_TITULO_II", "veredicto_base": "CONDICIONAL", "source_version": "LISR_2025" } },
+
+    { "tipo": "MODIFICA", "fromKey": "id", "fromVal": "N-LISR-2024", "toKey": "id", "toVal": "N-LISR-2023",
+      "props": { "fecha_efecto": "2024-01-01", "source_version": "LISR_2024" } },
+    { "tipo": "MODIFICA", "fromKey": "id", "fromVal": "N-LISR-2025", "toKey": "id", "toVal": "N-LISR-2024",
+      "props": { "fecha_efecto": "2025-01-01", "source_version": "LISR_2025" } }
+  ]
+}

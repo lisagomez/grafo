@@ -88,4 +88,30 @@ El sistema es un **copiloto**: propone el sustento, el contador firma. Flujo:
 
 ---
 
+## 4. Protocolo pre-commit (OBLIGATORIO)
+
+> Antes de **cada `git commit`**, el agente debe ejecutar este checklist. No es opcional:
+> es la forma de mantener la memoria del proyecto sincronizada con el código.
+
+1. **`BUSINESS_LOGIC.md`** — ¿cambió alguna **regla de negocio, restricción o supuesto fiscal** con este cambio?
+   (ej. un nuevo tope, una condición de deducibilidad, un nuevo veredicto, un régimen soportado).
+   → Si sí, **actualiza este archivo** para que refleje la nueva realidad antes de commitear.
+
+2. **[`PRP-01`](../PRPs/01-motor-legal.md)** — ¿se **completó una fase o sub-tarea** del Product Requirements Proposal?
+   → Marca el progreso (estado/avance) y **ajusta el alcance** si cambió.
+
+3. **`.claude/memory/`** — ¿**aprendimos algo nuevo**? (un error que encontramos y su fix, una limitación de Cypher,
+   una mejor forma de hacer el mock, una decisión de diseño no obvia).
+   → **Crea o actualiza** un archivo en `.claude/memory/` con ese aprendizaje, para no volver a resolverlo.
+   Registra también el aprendizaje en la sección *Aprendizajes (Self-Annealing)* del PRP si aplica.
+
+4. **Resumen de cambios** — genera un **mensaje de commit breve** que incluya explícitamente
+   **qué parte del sistema** se vio impactada (ej. `motor de inferencia`, `grafo/Cypher`, `Neo4jService/mock`,
+   `Legal Source Provider`, `docs/PRP`, `seed`). Usa el formato `tipo(área): resumen`.
+
+> Para volverlo *forzoso* (no solo documentado), se puede añadir un hook `pre-commit` en `.claude/settings.json`
+> vía `/update-config`. Mientras tanto, este checklist es la fuente de verdad del proceso.
+
+---
+
 *Memoria de dominio. Mantener sincronizada con el seed del grafo y con [PRP-01](../PRPs/01-motor-legal.md).*

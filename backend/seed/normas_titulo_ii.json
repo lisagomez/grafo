@@ -1,0 +1,116 @@
+{
+  "_meta": {
+    "pais": "MX",
+    "regimen": "PM_TITULO_II",
+    "source_version": "SAT/RMF 2026 (LISR+CFF DOF 2026-01-01)",
+    "_disclaimer": "DATOS ILUSTRATIVOS para desarrollo. Las cifras de topes y la vigencia DEBEN validarse contra la fuente oficial (LISR/RLISR/RMF/Criterios SAT) antes de produccion. La estructura es real; los valores son provisionales."
+  },
+
+  "regimenes": [
+    {
+      "clave": "PM_TITULO_II",
+      "pais": "MX",
+      "nombre": "Personas Morales - Titulo II LISR",
+      "fuente": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf",
+      "source_version": "LISR 2026 (DOF 2026-01-01)"
+    }
+  ],
+
+  "gastos": [
+    {
+      "clave": "VIATICOS",
+      "pais": "MX",
+      "nombre": "Viaticos y gastos de viaje",
+      "descripcion": "Erogaciones por hospedaje, alimentacion y transporte de personal en comision fuera de la sede.",
+      "fuente": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf",
+      "source_version": "LISR 2026 (DOF 2026-01-01)"
+    }
+  ],
+
+  "normas": [
+    {
+      "id": "MX-LISR-ART28-V-2026",
+      "pais": "MX",
+      "tipo": "ARTICULO",
+      "clave": "Art. 28 Frac. V LISR",
+      "titulo": "Requisitos de deducibilidad de viaticos",
+      "texto": "Los viaticos son deducibles cuando se destinen a hospedaje, alimentacion, transporte, uso de automovil y pago de kilometraje de la persona beneficiaria, dentro de una faja de 50 km del establecimiento, y se acompanen de comprobante fiscal (CFDI).",
+      "fuente_url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf#art28",
+      "vigente_desde": "2022-01-01",
+      "vigente_hasta": null,
+      "source_version": "LISR 2026 (DOF 2026-01-01)"
+    },
+    {
+      "id": "MX-LISR-ART28-V-2014",
+      "pais": "MX",
+      "tipo": "ARTICULO",
+      "clave": "Art. 28 Frac. V LISR (texto 2014)",
+      "titulo": "Requisitos de deducibilidad de viaticos (version anterior)",
+      "texto": "Version previa de los requisitos de deducibilidad de viaticos, modificada por la reforma de 2022.",
+      "fuente_url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR_2014.pdf#art28",
+      "vigente_desde": "2014-01-01",
+      "vigente_hasta": "2021-12-31",
+      "source_version": "LISR 2014 (DOF 2013-12-11)"
+    }
+  ],
+
+  "criterios": [
+    {
+      "id": "MX-SAT-CRIT-VIATICOS-2026",
+      "pais": "MX",
+      "clave": "Criterio Normativo Viaticos 2026",
+      "texto": "Para la deducibilidad, los viaticos deben corresponder a personas que tengan relacion laboral o presten servicios profesionales a la empresa.",
+      "fuente_url": "https://www.sat.gob.mx/normatividad/criterios-normativos#viaticos",
+      "vigente_desde": "2026-01-01",
+      "vigente_hasta": null,
+      "source_version": "Criterios SAT 2026"
+    }
+  ],
+
+  "relaciones": [
+    {
+      "tipo": "APLICA_A",
+      "fromKey": "id",   "fromVal": "MX-LISR-ART28-V-2026",
+      "toKey": "clave",  "toVal": "VIATICOS",
+      "props": {
+        "regimen": "PM_TITULO_II",
+        "tope_monto": null,
+        "tope_pct": null,
+        "condicion": "Requiere CFDI, comision fuera de 50km y relacion laboral/servicios. Hospedaje en el extranjero topado por RLISR (valor a validar).",
+        "veredicto_base": "CONDICIONAL",
+        "source_version": "LISR 2026 (DOF 2026-01-01)"
+      }
+    },
+    {
+      "tipo": "APLICA_A",
+      "fromKey": "id",   "fromVal": "MX-LISR-ART28-V-2014",
+      "toKey": "clave",  "toVal": "VIATICOS",
+      "props": {
+        "regimen": "PM_TITULO_II",
+        "tope_monto": null,
+        "tope_pct": null,
+        "condicion": "Version anterior (2014) — derogada por la vigencia de la norma 2026.",
+        "veredicto_base": "CONDICIONAL",
+        "source_version": "LISR 2014 (DOF 2013-12-11)"
+      }
+    },
+    {
+      "tipo": "MODIFICA",
+      "fromKey": "id", "fromVal": "MX-LISR-ART28-V-2026",
+      "toKey": "id",   "toVal": "MX-LISR-ART28-V-2014",
+      "props": {
+        "fecha_efecto": "2022-01-01",
+        "source_version": "LISR 2022 (DOF 2021-11-12)"
+      }
+    },
+    {
+      "tipo": "INTERPRETA",
+      "fromKey": "id", "fromVal": "MX-SAT-CRIT-VIATICOS-2026",
+      "toKey": "id",   "toVal": "MX-LISR-ART28-V-2026",
+      "props": {
+        "fecha_efecto": "2026-01-01",
+        "source_version": "Criterios SAT 2026"
+      }
+    }
+  ]
+}
