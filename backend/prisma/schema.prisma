@@ -1,0 +1,141 @@
+// Prisma Schema for SaaS Application
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  avatar        String?
+  role          String    @default("user")
+  emailVerified DateTime?
+  
+  // Relations
+  workspaces    WorkspaceMember[]
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  invitesSent   Invite[]   @relation("InvitesSent")
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("users")
+}
+
+// Workspace model (for multi-tenancy)
+model Workspace {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  plan        String    @default("free")
+  settings    Json?
+  
+  // Owner relation
+  ownerId     String
+  owner       User      @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  
+  // Relations
+  members     WorkspaceMember[]
+  invites     Invite[]
+  subscription Subscription?
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("workspaces")
+}
+
+// Workspace membership (many-to-many)
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  role        String    @default("member")
+  
+  // Relations
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  joinedAt    DateTime  @default(now())
+  
+  @@unique([userId, workspaceId])
+  @@map("workspace_members")
+}
+
+// Invitation model
+model Invite {
+  id          String    @id @default(cuid())
+  email       String
+  role        String    @default("member")
+  token       String    @unique
+  
+  // Relations
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedById String
+  invitedBy   User      @relation("InvitesSent", fields: [invitedById], references: [id])
+  
+  // Timestamps
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  
+  @@map("invites")
+}
+
+// Subscription model (Stripe)
+model Subscription {
+  id                   String    @id @default(cuid())
+  stripeCustomerId     String    @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  status               String    @default("inactive")
+  
+  // Relations
+  workspaceId          String    @unique
+  workspace            Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  // Period
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  
+  // Timestamps
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  @@map("subscriptions")
+}
+
+// Audit Log model
+model AuditLog {
+  id          String    @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String
+  userId      String?
+  workspaceId String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("audit_logs")
+}
+
