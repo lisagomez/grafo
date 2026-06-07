@@ -4,10 +4,61 @@
 > **Fecha**: 2026-06-07
 > **Proyecto**: grafo
 > **Blueprint**: ver sección [MVP Roadmap (fases)](#mvp-roadmap-fases). Implementación fase por fase con el skill `/bucle-agentico`.
-> **Avance**:
-> - ✅ **Fase 0 (Cimientos)** — completada en *Modo Arquitecto*: driver Neo4j, config, `.env.example`, schema de constraints.
-> - ✅ **Fase 1 (Grafo + Motor)** — completada en *Modo Arquitecto*: Cypher Query Service, `Neo4jService` (mock inyectable), `InferenceEngine` (DI por constructor), seed con `source_version` + validador de procedencia, fixture "Triángulo Fiscal" y suite `node:test` (11/11). **Pendiente**: ejecución contra una instancia Neo4j real (sin Docker en el entorno actual).
-> - 🚧 **Fase 3** parcial — `LegalSourceProvider` (Strategy) en `backend/src/lib/legal/sources/`.
+> **Avance global**: **~30%** (núcleo de lógica listo en *Modo Arquitecto*). Ver [Resumen de Avance](#resumen-de-avance).
+> - ✅ **Fase 0 (Cimientos)** — **Completada** (Modo Arquitecto).
+> - ✅ **Fase 1 (Grafo + Motor)** — **Completada** (Modo Arquitecto).
+> - ✅ **Fase 1.5 (Auditoría y Calidad de Grafo)** — **Completada** (Modo Arquitecto).
+> - 🚧 **Fase 3** — parcial (`LegalSourceProvider`).
+> - Deuda técnica / hallazgos del Sanity Check → [Deuda Técnica y Auditoría Proactiva](#deuda-técnica-y-auditoría-proactiva).
+
+---
+
+## Resumen de Avance
+
+> Estimación al cierre del ciclo Fase 0/1 + Auditoría (2026-06-07). "Modo Arquitecto" = lógica
+> implementada y testeada con mocks; falta wiring a Neo4j real, capa HTTP/API y UI.
+
+| Fase | Estado | Peso aprox. |
+|---|---|---|
+| Fase 0 — Cimientos | ✅ Completada (Modo Arquitecto) | ▰▰▰▰ |
+| Fase 1 — Grafo + Motor | ✅ Completada (Modo Arquitecto) | ▰▰▰▰ |
+| Fase 1.5 — Auditoría y Calidad de Grafo | ✅ Completada (Modo Arquitecto) | ▰▰▰ |
+| Fase 2 — Sync Obsidian | ⬜ Pendiente | ▱▱▱ |
+| Fase 3 — Motor de inferencia (rutas/contexto) | 🚧 Parcial (`LegalSourceProvider`) | ▰▱▱ |
+| Fase 4 — Conectividad A2A | ⬜ Pendiente | ▱▱▱ |
+| Fase 5 — Frontend consulta/dictamen | ⬜ Pendiente | ▱▱▱ |
+| Fase 6 — Export + HITL | ⬜ Pendiente | ▱▱▱ |
+| Fase 7 — Voz | ⬜ Pendiente | ▱▱▱ |
+| Fase 8 — Ingesta / Auto-Research | ⬜ Pendiente | ▱▱▱ |
+
+**Progreso global estimado: ~30%.** El corazón del producto (grafo + motor de inferencia + auditoría +
+trazabilidad por `source_version`) está validado por tests; lo pendiente es conectar infraestructura
+(Neo4j real, API, UI) y las capas de blindaje/interop/voz.
+
+---
+
+## Deuda Técnica y Auditoría Proactiva
+
+Hallazgos del **Sanity Check** (2026-06-07) contrastando `BUSINESS_LOGIC.md` ↔ `InferenceEngine.js`.
+**Mitigación parcial ya entregada:** el `GraphAuditor` detecta estos problemas de forma proactiva
+(pre-inferencia); el endurecimiento dentro del motor queda como deuda explícita.
+
+- **D1 — Vigencia debe migrar a Cypher.** El motor resuelve vigencia en JS sobre `vigente_desde/hasta`
+  e **ignora** los edges `DEROGA`/`MODIFICA` (`fecha_efecto`) que define la lógica de negocio.
+  → ⬜ **Migrar la lógica de vigencia de `InferenceEngine` a una Cypher Query nativa** que recorra los edges.
+
+- **D2 — Guard de Consistencia (integridad de datos).** No existe una verificación dura de que el
+  `source_version` sea coherente con la ventana de vigencia. Es un **requisito de integridad de datos**.
+  → ✅ *Detección proactiva* vía `GraphAuditor.validarConsistenciaVersiones()` (`SOURCE_MISMATCH`,
+  `VENTANA_INVALIDA`, `VIVA_DEROGADA`, `SIN_SOURCE_VERSION`).
+  → ⬜ Pendiente: convertirlo en **guard bloqueante** antes de emitir dictamen.
+
+- **D4 — Modo Contradicción (B3) no cableado al veredicto.** `requiereRevision` solo se activa por
+  veredictos base distintos; el motor no consulta flags `revision_pendiente` ni `detectarContradicciones()`.
+  → ⬜ **Cablear B3**: degradar a `CONDICIONAL — requiere revisión` cuando el lineage toque un nodo marcado.
+
+> Las queries nativas de auditoría (`AUDIT_CYPHER` en `GraphAuditor.js`) están documentadas; hoy la
+> auditoría corre en JS sobre `exportGrafo()` para ser testeable sin Neo4j → ⬜ ejecutar nativo cuando haya DB.
 
 ---
 
@@ -300,6 +351,21 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 - `backend/src/lib/graph/cypherQueries.js` — strings Cypher parametrizados (constantes nombradas). `backend/src/lib/graph/cypherService.js` — Cypher Query Service (API de negocio sobre el driver).
 - `backend/scripts/seed-graph.js` + `backend/seed/normas_titulo_ii.json` — dataset curado para PM Título II (`:Gasto`: Viáticos, Servicios Profesionales, Equipo de Cómputo, Donativos, Intereses, etc.) con `:Norma`, `:Criterio`, vigencias y relaciones reales. El seed carga vía `cypherService.upsertNorma/mergeRelacion`.
 - **Verificación:** `npm run seed:graph` y comprobar en Neo4j Browser (`http://localhost:7474`) que el grafo de Viáticos se visualiza con sus `:Norma`/`:Criterio` y relaciones.
+
+### Fase 1.5 — Auditoría y Calidad de Grafo ✅ Completada (Modo Arquitecto)
+**Objetivo:** implementar `GraphAuditor.js` para **detección proactiva** de errores estructurales del grafo
+*antes* de la inferencia, garantizando que no se emitan dictámenes sobre datos rotos.
+
+- `backend/src/services/GraphAuditor.js` — auditor inyectable (depende de `Neo4jService.exportGrafo()`).
+- **Tareas:**
+  - ✅ **Query de huérfanos** — `detectarOrfanos()`: gastos `SIN_NORMA` o `SIN_VIGENTE` a la fecha.
+  - ✅ **Validación de consistencia de versiones** — `validarConsistenciaVersiones()`: `SOURCE_MISMATCH`,
+    `VENTANA_INVALIDA`, `VIVA_DEROGADA`, `SIN_SOURCE_VERSION`.
+  - ✅ **Reporte de inconsistencias** — ambos métodos devuelven un reporte estructurado (`{total, ...}`).
+  - ✅ `exportGrafo()` añadido al contrato `Neo4jService` (real = dump Cypher `EXPORT_GRAFO`; mock = dataset).
+  - ✅ Tests `tests/auditor.test.js` + fixture `tests/fixtures/audit_data.json`.
+- **Pendiente (deuda):** ejecutar `AUDIT_CYPHER` de forma nativa en Neo4j (ver [Deuda Técnica](#deuda-técnica-y-auditoría-proactiva)).
+- **Verificación:** `npm test` → tests de orfandad y consistencia en verde (mock).
 
 ### Fase 2 — Sincronización Bidireccional Obsidian ↔ Neo4j
 - `backend/src/lib/obsidian/vaultSync.js` con `exportFromGraph()` (Neo4j → `.md`) e `importToGraph()` (`.md` → Neo4j), serializer de frontmatter + wikilinks y parser con `gray-matter`.

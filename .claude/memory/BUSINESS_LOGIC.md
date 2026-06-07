@@ -1,6 +1,6 @@
 # BUSINESS_LOGIC.md — Grafo (Lógica de Negocio Fiscal)
 
-> Memoria de dominio del proyecto. Origen: sesión de entrevista de negocio + [PRP-01](../PRPs/01-motor-legal.md).
+> Memoria de dominio del proyecto. Origen: sesión de entrevista de negocio + [PRP-01](../PRPs/PRP-01-Cimientos-Motor.md).
 > **Consultar ANTES de escribir o ejecutar cualquier query de Cypher** sobre el grafo legal.
 >
 > ⚠️ **Regla de oro**: las cifras legales concretas (topes, porcentajes, fechas de vigencia) NO viven aquí.
@@ -86,6 +86,20 @@ El sistema es un **copiloto**: propone el sustento, el contador firma. Flujo:
 
 > El criterio profesional del contador es la autoridad final. El motor nunca firma; entrega evidencia trazable.
 
+### Auditoría de Grafo (proactiva, PRE-inferencia)
+
+El sistema cuenta con un **Auditor de Grafo proactivo** (`backend/src/services/GraphAuditor.js`) que detecta
+errores estructurales **antes** de que el motor de inferencia se ejecute, evitando dictámenes sobre datos rotos:
+
+- **`detectarOrfanos()`** — gastos **huérfanos**: sin ninguna `:Norma` asociada (`SIN_NORMA`) o cuyas normas
+  están todas fuera de vigencia a la fecha (`SIN_VIGENTE`).
+- **`validarConsistenciaVersiones()`** — discrepancias entre `source_version` y vigencia: `VENTANA_INVALIDA`
+  (vigente_hasta < vigente_desde), `VIVA_DEROGADA` (sin vigente_hasta pero destino de un `DEROGA`),
+  `SOURCE_MISMATCH` (la relación `APLICA_A` cita un `source_version` distinto al del nodo) y `SIN_SOURCE_VERSION`.
+
+Regla operativa: correr la auditoría tras cada seed/ingesta y antes de confiar en la inferencia. Un grafo con
+huérfanos o inconsistencias debe corregirse (vía Obsidian / re-seed) antes de emitir dictámenes.
+
 ---
 
 ## 4. Protocolo pre-commit (OBLIGATORIO)
@@ -97,7 +111,7 @@ El sistema es un **copiloto**: propone el sustento, el contador firma. Flujo:
    (ej. un nuevo tope, una condición de deducibilidad, un nuevo veredicto, un régimen soportado).
    → Si sí, **actualiza este archivo** para que refleje la nueva realidad antes de commitear.
 
-2. **[`PRP-01`](../PRPs/01-motor-legal.md)** — ¿se **completó una fase o sub-tarea** del Product Requirements Proposal?
+2. **[`PRP-01`](../PRPs/PRP-01-Cimientos-Motor.md)** — ¿se **completó una fase o sub-tarea** del Product Requirements Proposal?
    → Marca el progreso (estado/avance) y **ajusta el alcance** si cambió.
 
 3. **`.claude/memory/`** — ¿**aprendimos algo nuevo**? (un error que encontramos y su fix, una limitación de Cypher,
@@ -114,4 +128,4 @@ El sistema es un **copiloto**: propone el sustento, el contador firma. Flujo:
 
 ---
 
-*Memoria de dominio. Mantener sincronizada con el seed del grafo y con [PRP-01](../PRPs/01-motor-legal.md).*
+*Memoria de dominio. Mantener sincronizada con el seed del grafo y con [PRP-01](../PRPs/PRP-01-Cimientos-Motor.md).*
