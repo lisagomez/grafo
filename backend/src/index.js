@@ -12,9 +12,6 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 // Import Routes
 import authRoutes from './routes/auth.js';
-import billingRoutes from './routes/billing.js';
-import workspacesRoutes from './routes/workspaces.js';
-import teamsRoutes from './routes/teams.js';
 import permissionsRoutes from './routes/permissions.js';
 
 const app = express();
@@ -59,9 +56,6 @@ app.get('/health', (req, res) => {
 const apiRouter = express.Router();
 
 apiRouter.use('/auth', authRoutes);
-apiRouter.use('/billing', billingRoutes);
-apiRouter.use('/workspaces', workspacesRoutes);
-apiRouter.use('/teams', teamsRoutes);
 apiRouter.use('/permissions', permissionsRoutes);
 
 app.use(config.apiPrefix, apiRouter);

@@ -33,33 +33,6 @@ export function useAuth() {
 }
 
 /**
- * Workspace Context for multi-tenant support
- */
-interface Workspace {
-  id: string;
-  name: string;
-  slug: string;
-  plan: string;
-}
-
-interface WorkspaceContextType {
-  currentWorkspace: Workspace | null;
-  workspaces: Workspace[];
-  switchWorkspace: (workspaceId: string) => void;
-  createWorkspace: (name: string) => Promise<Workspace>;
-}
-
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
-
-export function useWorkspace() {
-  const context = useContext(WorkspaceContext);
-  if (context === undefined) {
-    throw new Error('useWorkspace must be used within a WorkspaceProvider');
-  }
-  return context;
-}
-
-/**
  * Toast/Notification Context
  */
 interface Toast {
@@ -91,10 +64,6 @@ export function Providers({ children }: { children: ReactNode }) {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Workspace State
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
   // Toast State
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -150,7 +119,6 @@ export function Providers({ children }: { children: ReactNode }) {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
-      setCurrentWorkspace(null);
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -170,35 +138,6 @@ export function Providers({ children }: { children: ReactNode }) {
       
       const userData = await response.json();
       setUser(userData.user);
-    } catch (error) {
-      throw error;
-    }
-  }, []);
-
-  // Workspace Functions
-  const switchWorkspace = useCallback((workspaceId: string) => {
-    const workspace = workspaces.find(w => w.id === workspaceId);
-    if (workspace) {
-      setCurrentWorkspace(workspace);
-      localStorage.setItem('currentWorkspaceId', workspaceId);
-    }
-  }, [workspaces]);
-
-  const createWorkspace = useCallback(async (name: string): Promise<Workspace> => {
-    try {
-      const response = await fetch('/api/workspaces', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create workspace');
-      }
-      
-      const newWorkspace = await response.json();
-      setWorkspaces(prev => [...prev, newWorkspace]);
-      return newWorkspace;
     } catch (error) {
       throw error;
     }
@@ -230,25 +169,16 @@ export function Providers({ children }: { children: ReactNode }) {
         register,
       }}
     >
-      <WorkspaceContext.Provider
+      <ToastContext.Provider
         value={{
-          currentWorkspace,
-          workspaces,
-          switchWorkspace,
-          createWorkspace,
+          toasts,
+          addToast,
+          removeToast,
         }}
       >
-        <ToastContext.Provider
-          value={{
-            toasts,
-            addToast,
-            removeToast,
-          }}
-        >
-          {children}
-          <ToastContainer />
-        </ToastContext.Provider>
-      </WorkspaceContext.Provider>
+        {children}
+        <ToastContainer />
+      </ToastContext.Provider>
     </AuthContext.Provider>
   );
 }

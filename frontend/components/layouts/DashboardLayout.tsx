@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  CreditCard,
-  Users,
-  Building2,
   Settings,
   LogOut,
   Menu,
@@ -16,7 +13,7 @@ import {
   Search,
   ChevronDown,
 } from 'lucide-react';
-import { useAuth, useWorkspace } from '@/app/providers';
+import { useAuth } from '@/app/providers';
 
 interface NavItem {
   name: string;
@@ -26,9 +23,6 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-  { name: 'Team', href: '/dashboard/teams', icon: Users },
-  { name: 'Workspaces', href: '/dashboard/workspaces', icon: Building2 },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -39,7 +33,6 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { currentWorkspace } = useWorkspace();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -87,24 +80,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
             >
               <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-
-          {/* Workspace Switcher */}
-          <div className="px-4 py-3 border-b border-gray-200">
-            <button className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600 font-semibold text-sm">
-                  {currentWorkspace?.name?.charAt(0) || 'W'}
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900 truncate max-w-[140px]">
-                    {currentWorkspace?.name || 'My Workspace'}
-                  </p>
-                  <p className="text-xs text-gray-500">Free Plan</p>
-                </div>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
             </button>
           </div>
 

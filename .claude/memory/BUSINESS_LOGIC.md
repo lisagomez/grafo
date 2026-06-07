@@ -56,7 +56,7 @@ permite sujeto a límites/condiciones, es **Condicional**.
 | **Criterio (SAT)** | Interpretación oficial que matiza una norma. Nodo `:Criterio` (`INTERPRETA` una `:Norma`). |
 | **Vigencia** | Estado temporal de una norma; clave para descartar normas derogadas. |
 | **Contador Público Senior** | Usuario primario. Human-in-the-Loop de alta autoridad: valida y **firma** el dictamen. |
-| **Cliente (del despacho)** | Empresa atendida por el contador, con su régimen fiscal asociado. |
+| **Cliente (del despacho)** | Empresa atendida por el contador, con su régimen fiscal asociado. Es el concepto de dominio que **sustituye** al `workspace` genérico del scaffold (cuyas rutas/componentes `workspaces`/`teams`/`billing` fueron **eliminadas el 2026-06-07**); `clientes` se implementará en Fase 3. |
 | **Dictamen de Soporte** | Salida del motor: veredicto + ruta legal (lineage) + sustento. Estados de validación: `PENDIENTE/VALIDADO/RECHAZADO`. |
 | **Reporte de Sustento** | Export (PDF/JSON) del dictamen validado; prueba de debida diligencia. |
 | **Lineage** | Cadena de nodos/relaciones que justifica el veredicto; obligatorio en toda respuesta. |
@@ -97,8 +97,11 @@ errores estructurales **antes** de que el motor de inferencia se ejecute, evitan
   (vigente_hasta < vigente_desde), `VIVA_DEROGADA` (sin vigente_hasta pero destino de un `DEROGA`),
   `SOURCE_MISMATCH` (la relación `APLICA_A` cita un `source_version` distinto al del nodo) y `SIN_SOURCE_VERSION`.
 
-Regla operativa: correr la auditoría tras cada seed/ingesta y antes de confiar en la inferencia. Un grafo con
-huérfanos o inconsistencias debe corregirse (vía Obsidian / re-seed) antes de emitir dictámenes.
+Ambos métodos devuelven un reporte estándar `{ status: 'ok' | 'error', issues: [], count }`.
+
+Regla operativa: correr la auditoría tras cada seed/ingesta y antes de confiar en la inferencia, vía el CLI
+**`npm run audit`** (`backend/scripts/audit.js`; **exit 1** si hay incidencias, **0** si limpio — apto como gate).
+Un grafo con huérfanos o inconsistencias debe corregirse (vía Obsidian / re-seed) antes de emitir dictámenes.
 
 ---
 

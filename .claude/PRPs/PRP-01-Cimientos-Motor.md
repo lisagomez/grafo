@@ -68,6 +68,10 @@ Grafo resuelve la **asimetría de información fiscal**: un Contador Público Se
 
 **Realidad técnica (decisión del usuario, no migrar):** se conserva el scaffold existente **Express + Prisma + PostgreSQL + JWT**. Se **añade Neo4j** como motor del grafo legal y **Obsidian** como capa de gestión del conocimiento. No se adopta Supabase.
 
+**Arquitectura (declaración explícita):** el proyecto usa una organización **layer-based** (`backend/src/{lib,services,routes,middleware,config}`), **NO Feature-First**. El Golden Path Feature-First + Supabase + Next 16 del template genérico SaaS Factory (`prp-base.md`) **no aplica** a este proyecto. La fuente de verdad arquitectónica es este PRP + `CLAUDE.md`, no `prp-base.md`.
+
+**Scaffold genérico — eliminado (2026-06-07):** se **removieron** las rutas/componentes de `workspaces`, `teams` y `billing` (backend `routes/*` + frontend `app/dashboard/*` + `WorkspaceContext` en `providers.tsx` + métodos en `lib/api.ts`). Quedan solo **`auth` base** y `permissions` registrados en `index.js`. El concepto `workspace` se sustituye por `Cliente`/cartera del despacho (Fase 3); `dictamen`/`consulta`/`grafo` llegan en Fase 3/5. **Prisma:** modelos `Workspace/WorkspaceMember/Invite/Subscription` **eliminados** de `schema.prisma` (quedan `User` + `AuditLog`; `prisma format` ✅). Migración para dropear las tablas queda **pendiente** hasta que exista una BD. **Aún presentes (fuera de scope):** middleware `requireWorkspace*` en `auth.js` y `routes/permissions.js` (RBAC `workspace:*`) — `permissions` es scaffold acoplado a workspace y puede revisarse después.
+
 ### División de responsabilidades de datos
 | Capa | Tecnología | Responsabilidad |
 |---|---|---|
@@ -304,7 +308,7 @@ Rutina que recorre el grafo buscando inconsistencias lógicas y las **marca para
   - `:Criterio` vigente que `INTERPRETA` una `:Norma` ya derogada.
 - Marcado: a los nodos/relaciones afectados se les fija `revision_pendiente=true` + `motivo_conflicto`; opcionalmente se crea un nodo `(:Conflicto {tipo, detectado_en})` enlazado.
 - **Acoplamiento con el dictamen:** si el lineage de una consulta toca un elemento marcado, el veredicto se degrada a `Condicional — requiere revisión` y se expone el conflicto al contador (que puede resolverlo vía Obsidian, cerrando el loop bidireccional).
-- Ejecución: script `backend/scripts/diagnose-contradictions.js` (on-demand y/o tras cada seed/ingesta); resultados consultables vía `GET /api/grafo/conflictos`.
+- **Estado real (2026-06-07):** la detección está **implementada en `GraphAuditor.validarConsistenciaVersiones()`** (caso `VIVA_DEROGADA`, más `VENTANA_INVALIDA`/`SOURCE_MISMATCH`), corrida vía `npm run audit`. El script standalone `diagnose-contradictions.js` y el endpoint `GET /api/grafo/conflictos` **no se construyeron** (la función se consolidó en el auditor). Pendiente: cubrir los patrones de ciclos y `APLICA_A` excluyentes.
 
 ## Servicios Externos — Interoperabilidad A2A (Agent-to-Agent)
 
@@ -384,7 +388,7 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 - `backend/src/lib/legal/sources/{types,MXLegalProvider,index}` — contrato `LegalSourceProvider` (Strategy) + impl. MX (LISR/CFF) + `LegalSourceFactory`. Las Fuentes de Verdad viven aquí, no en el motor.
 - `backend/src/lib/graph/contextResolver.js` — Legal Context Resolver: `resolve({country})` obtiene el provider vía `LegalSourceFactory` → `{ namespace, sources, sourceVersion }`; dispara `autoResearchIngest` si la jurisdicción no está cargada. **V1: MX precargado.**
 - `backend/src/lib/graph/inferenceEngine.js` — `resolverDictamen({gasto, regimen, contexto, fecha, country})`: primero llama al `contextResolver`, luego consume `cypherService.getCadenaLegal` (con `namespace`, que retorna el **`path`/lineage** completo) → `{veredicto, rutaLegal[] (lineage), sustento{topes,citas}, pais, sourceVersion}`. No contiene Cypher; orquesta, aplica reglas de veredicto/topes y **degrada a `Condicional — requiere revisión`** si el lineage toca un elemento con `revision_pendiente=true` (B3).
-- `backend/scripts/diagnose-contradictions.js` + query `DETECTAR_CONTRADICCIONES` — Modo Contradicción (B3): marca nodos/relaciones inconsistentes. `GET /api/grafo/conflictos` los lista.
+- Modo Contradicción (B3): **implementado en `GraphAuditor.validarConsistenciaVersiones()`** (`VIVA_DEROGADA` etc.), no en un script `diagnose-contradictions.js` separado (ese no se construyó).
 - `backend/src/routes/dictamen.js` — `POST /api/dictamen` (Zod: `gastoClave`, `regimen`, `contexto`), persiste `Consulta` + `Dictamen` vía Prisma, responde el dictamen 3-niveles. Registrar en `index.js`.
 - `backend/src/routes/grafo.js` — `GET /api/grafo/gastos`, `GET /api/grafo/norma/:id` (para liga a fuente).
 - **Verificación:** (1) `npm run test:inference` imprime la cadena legal de Viáticos; (2) `curl POST /api/dictamen` con Viáticos/PM-Título-II → veredicto + ruta + sustento en < 45 s.
@@ -427,8 +431,8 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 
 ## Mapa de archivos (nuevos / modificados)
 
-**Nuevos — backend:** `docker-compose.yml` (raíz), `backend/src/lib/{neo4j.js,prisma.js}`, `backend/src/lib/graph/{schema.cypher,cypherQueries.js,cypherService.js,contextResolver.js,inferenceEngine.js}`, `backend/src/lib/legal/sources/{types,MXLegalProvider,index}`, `backend/src/lib/research/autoResearchIngest.js`, `backend/src/lib/obsidian/{vaultSync.js,conflict.js}`, `backend/src/lib/voice/{sttService.js,intentExtractor.js,voiceQueue.js}`, `backend/src/lib/voice/stt/{index.js,openAIWhisperProvider.js,localWhisperProvider.js}`, `backend/src/lib/a2a/{protocol.js,a2aAdapter.js,agentCard.js}`, `backend/src/workers/voiceWorker.js`, `backend/src/routes/{dictamen.js,grafo.js,clientes.js,voz.js,a2a.js}`, `backend/scripts/{seed-graph.js,test-inference.js,diagnose-contradictions.js,sync-obsidian.js,watch-obsidian.js}`, `backend/seed/normas_titulo_ii.json`.
-**Modificados — backend:** `backend/prisma/schema.prisma`, `backend/src/config/index.js`, `backend/src/index.js`, `backend/package.json` (deps: `neo4j-driver`, `pdfkit`, `gray-matter`, `chokidar`, `openai`, `multer`, `bullmq`, `ioredis`; scripts `seed:graph`, `test:inference`, `diagnose:contradictions`, `sync:obsidian`, `watch:obsidian`, `worker:voice`), `.env.example` (`STT_PROVIDER`, `OPENAI_API_KEY`, `WHISPER_MODEL`, `VOICE_MAX_AUDIO_MB`, `A2A_PROTOCOL_VERSION`, `DEFAULT_COUNTRY`).
+**Nuevos — backend:** `docker-compose.yml` (raíz), `backend/src/lib/{neo4j.js,prisma.js}`, `backend/src/lib/graph/{schema.cypher,cypherQueries.js,cypherService.js,Neo4jService.js,seedValidator.js,contextResolver.js,inferenceEngine.js}`, `backend/src/services/GraphAuditor.js`, `backend/src/lib/legal/sources/{types,MXLegalProvider,index}`, `backend/src/lib/research/autoResearchIngest.js`, `backend/src/lib/obsidian/{vaultSync.js,conflict.js}`, `backend/src/lib/voice/{sttService.js,intentExtractor.js,voiceQueue.js}`, `backend/src/lib/voice/stt/{index.js,openAIWhisperProvider.js,localWhisperProvider.js}`, `backend/src/lib/a2a/{protocol.js,a2aAdapter.js,agentCard.js}`, `backend/src/workers/voiceWorker.js`, `backend/src/routes/{dictamen.js,grafo.js,clientes.js,voz.js,a2a.js}`, `backend/scripts/{seed-graph.js,test-inference.js,audit.js,stress-audit.js,sync-obsidian.js,watch-obsidian.js}`, `backend/seed/normas_titulo_ii.json`.
+**Modificados — backend:** `backend/prisma/schema.prisma`, `backend/src/config/index.js`, `backend/src/index.js`, `backend/package.json` (deps: `neo4j-driver`, `pdfkit`, `gray-matter`, `chokidar`, `openai`, `multer`, `bullmq`, `ioredis`; scripts `seed:graph`, `test:inference`, `audit`, `stress:audit`, `test`, `sync:obsidian`, `watch:obsidian`, `worker:voice`), `.env.example` (`STT_PROVIDER`, `OPENAI_API_KEY`, `WHISPER_MODEL`, `VOICE_MAX_AUDIO_MB`, `A2A_PROTOCOL_VERSION`, `DEFAULT_COUNTRY`).
 **Nuevos — frontend:** `frontend/app/dashboard/consulta/page.tsx`, `frontend/app/dashboard/dictamen/[id]/page.tsx`, componentes shadcn/ui.
 **Modificados — frontend:** `frontend/lib/api.ts` (+`vozApi`), `frontend/package.json` (shadcn deps), componente de grabación (MediaRecorder) en consulta y dictamen.
 **Raíz:** `PRP.md`, `BUSINESS_LOGIC.md` (pendiente de la sesión previa).
@@ -440,7 +444,7 @@ Mensaje A2A → [A2A Adapter] valida (Zod, schema A2A) → traduce a params inte
 2. `npm run sync:obsidian -- --both` → vault navegable en Obsidian (Graph View muestra relaciones); editar un `.md` y confirmar que el cambio vuelve a Neo4j (sync bidireccional).
 3. Backend arriba → `POST /api/dictamen` (Viáticos, PM Título II) responde veredicto+ruta+sustento en < 45 s.
 4. Frontend (Playwright MCP): consulta estructurada → dictamen 3-niveles (con lineage visible) → validar (HITL) → exportar PDF y JSON.
-5. `npm run diagnose:contradictions` → inserta un conflicto de prueba y verificar que el dictamen afectado se degrada a `Condicional — requiere revisión` y que `GET /api/grafo/conflictos` lo lista.
+5. `npm run audit` → el `GraphAuditor` detecta inconsistencias (`VIVA_DEROGADA`/`VENTANA_INVALIDA`/`SOURCE_MISMATCH`) con exit 1; el dictamen afectado se degrada a `Condicional — requiere revisión`.
 6. Intentar exportar un dictamen sin validar → 409 (gate HITL activo).
 7. A2A: `GET /.well-known/agent.json` expone la skill; `POST /api/a2a/tasks` (Viáticos) responde artifact con veredicto **+ lineage**; subir `A2A_PROTOCOL_VERSION` solo toca `lib/a2a/` (motor intacto).
 8. Context Resolver: una consulta MX devuelve `pais:'MX'` + `source_version` (de `FuentePais`) en el dictamen; una consulta con `country` no cargado encola `autoResearchIngest` y responde `procesando_jurisdiccion` (no inventa).
