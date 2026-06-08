@@ -1,0 +1,35 @@
+%% Esquema del grafo legal de Grafo (modelo de propiedades para Neo4j).
+%% Prepara la migración a Neo4j SIN romper nada: refleja el modelo que hoy consume
+%% el InferenceEngine (vía el seed/Mock) y el objetivo vault-native con :Requisito.
+%%
+%%   ── modelo ACTUAL (sembrado + consumido por el motor): :Norma -[:APLICA_A]-> :Gasto
+%%   ·· objetivo VAULT-NATIVE (de las aristas del pseudocódigo): :Gasto -[:ES_DEDUCIBLE_SI]-> :Requisito
+%%
+%% Fuentes de verdad de nombres/props:
+%%   backend/src/lib/graph/schema.cypher  (constraints)
+%%   backend/src/lib/graph/cypherQueries.js  (UPSERT_* y CADENA_LEGAL_POR_GASTO)
+
+graph LR
+  Norma["<b>:Norma</b><br/>id (PK)<br/>clave · pais<br/>vigente_desde / vigente_hasta<br/>fuente_url · source_version"]
+  Gasto["<b>:Gasto</b><br/>clave (PK) · pais<br/>source_version"]
+  Requisito["<b>:Requisito</b><br/>clave · descripcion"]
+  Regimen["<b>:Regimen</b><br/>clave (PK)"]
+  Criterio["<b>:Criterio</b><br/>id (PK) · clave<br/>fuente_url · source_version"]
+
+  %% Modelo actual (seed + motor)
+  Norma -- "APLICA_A { regimen, veredicto_base,<br/>tope_monto, tope_pct, condicion, source_version }" --> Gasto
+  Norma -- "DEROGA / MODIFICA { fecha_efecto }" --> Norma
+  Criterio -- "INTERPRETA" --> Norma
+
+  %% Objetivo vault-native (requisitos como nodos de primera clase)
+  Gasto -. "ES_DEDUCIBLE_SI { tope_monto, tope_pct, condicion }" .-> Requisito
+  Gasto -. "NO_ES_DEDUCIBLE_SI" .-> Requisito
+
+  %% Régimen: hoy viaja como propiedad de APLICA_A (a.regimen); RIGE_EN queda
+  %% declarado en el vocabulario del provider para una futura aristización.
+  Norma -. "RIGE_EN (futuro)" .-> Regimen
+
+  classDef actual fill:#e8f0fe,stroke:#1a73e8,color:#10233f;
+  classDef vault fill:#fef7e0,stroke:#f9ab00,color:#3f2d10;
+  class Norma,Gasto,Regimen,Criterio actual;
+  class Requisito vault;

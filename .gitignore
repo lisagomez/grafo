@@ -18,6 +18,12 @@ out/
 build/
 dist/
 *.egg-info/
+next-env.d.ts
+
+# Presentations (exports autogenerados desde los .md fuente; estos NO se versionan)
+presentations/*.html
+presentations/*.pdf
+presentations/*.pptx
 
 # IDE
 .idea/
