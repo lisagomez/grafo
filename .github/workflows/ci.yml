@@ -1,0 +1,60 @@
+name: CI
+
+# Gate de integridad: pruebas + auditoría de la bóveda de conocimiento.
+# El deploy depende de este gate (needs:), así un error de formato en la bóveda
+# (scripts/audit-vault.js → exit 1) bloquea cualquier despliegue.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  vault-gate:
+    name: Tests + Auditoría de bóveda
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Suite de pruebas
+        run: npm test
+
+      # Bloquea el pipeline si la bóveda tiene notas mal formadas (exit 1).
+      # Un país vacío (sin reglas curadas) es informativo y NO bloquea (exit 0).
+      - name: Auditoría de la bóveda
+        run: npm run audit:vault
+
+      # El esquema publicado es un artefacto GENERADO desde KNOWLEDGE_SCHEMA.
+      # Si difiere del versionado, alguien cambió el motor sin regenerarlo: falla.
+      # Corre en la raíz del repo (docs/ y git viven ahí, no en backend/).
+      - name: Esquema de conocimiento sincronizado
+        working-directory: ${{ github.workspace }}
+        run: |
+          (cd backend && npm run generate-schema)
+          if ! git diff --exit-code docs/knowledge-schema.json; then
+            echo "::error::Error: El esquema de conocimiento está desincronizado con el validador. Ejecuta npm run generate-schema y commitea los cambios."
+            exit 1
+          fi
+
+  # TODO: Configurar comando de despliegue según el proveedor (Vercel/Fly/Docker). Asegurar inyección de variables de entorno de producción.
+  deploy:
+    name: Deploy
+    needs: vault-gate # ← no se ejecuta si el gate falla
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      # TODO(plantilla): reemplaza por los pasos reales de despliegue del proyecto.
+      # Llega aquí solo si `vault-gate` (pruebas + auditoría de bóveda) pasó.
+      - run: echo "Bóveda impecable y pruebas en verde — listo para desplegar."

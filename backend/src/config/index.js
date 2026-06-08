@@ -4,8 +4,16 @@
  */
 
 import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 dotenv.config();
+
+// Raíz del proyecto, resuelta desde este archivo (backend/src/config/index.js).
+// Permite expresar rutas como relativas y resolverlas a absolutas sin depender
+// del cwd desde el que se ejecute el proceso.
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const knowledgeBaseRelative = process.env.KNOWLEDGE_BASE_PATH || './knowledge-base';
 
 export const config = {
   // Environment
@@ -31,6 +39,16 @@ export const config = {
 
   // Jurisdicción por defecto (Legal Context Resolver)
   defaultCountry: process.env.DEFAULT_COUNTRY || 'MX',
+
+  // Bóveda de conocimiento (Fuente de Verdad de reglas fiscales).
+  // `path` es la ruta relativa portable (vale en local y en el servidor del cliente);
+  // `root` es su resolución absoluta para lectura desde cualquier cwd.
+  knowledgeBase: {
+    path: knowledgeBaseRelative,
+    root: path.resolve(projectRoot, knowledgeBaseRelative),
+    countriesDir: path.resolve(projectRoot, knowledgeBaseRelative, 'countries'),
+    globalDir: path.resolve(projectRoot, knowledgeBaseRelative, 'global'),
+  },
 
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',

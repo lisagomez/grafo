@@ -41,5 +41,30 @@ Cuándo consultar qué, antes de escribir código:
 | `npm test` | Suite `node:test` (motor, auditor, lint de Cypher). |
 | `npm run seed:graph` | Valida procedencia y siembra el grafo (requiere Neo4j). |
 | `npm run test:inference` | Consulta de prueba del motor (mock si no hay Neo4j). |
+| `npm run test:vault-inference` | Dictamen del motor **sobre datos de la bóveda** (vault → `VaultRuleService` → motor). |
+| `npm run audit:vault` | **Gate de la bóveda**: bloquea (exit 1) si hay notas mal formadas; un país vacío es informativo (exit 0). |
+| `npm run export:knowledge -- <iso>` | **Exporta** el conocimiento de un país al formato estándar → `out/knowledge/<ISO>.json`. |
+| `npm run generate-schema` | Regenera `docs/knowledge-schema.json` desde `KNOWLEDGE_SCHEMA` (fuente única). |
 
 > Correr `node scripts/audit.js` tras cada seed/ingesta y **antes** de confiar en la inferencia (ver Fase 1.5 del PRP-01).
+
+## Formato estándar de intercambio (Knowledge Schema)
+
+La salida oficial del knowledge-engine es un **JSON estándar** (`metadata` + `rules[]` con `edges` sujeto/predicado/efecto/objeto + `warnings`) que **cualquier motor de reglas** puede consumir. Ciclo cerrado **curaduría → validación → exportación**:
+
+- **Contrato:** [`docs/knowledge-schema.json`](docs/knowledge-schema.json) — artefacto **generado**, no editar a mano. Fuente única: `KNOWLEDGE_SCHEMA` en `backend/src/lib/knowledge-engine.js` (`npm run generate-schema` lo regenera; el validador deriva del mismo objeto).
+- **Producción:** `toKnowledgeSchema(countryRuleSet)` serializa; `validateKnowledgeSchema()` valida.
+- **Extracción oficial:** `npm run export:knowledge -- <iso>` (valida antes de escribir; nunca exporta algo que no cumpla el contrato).
+- **Nota:** este formato es genérico y *más simple* que el modelo interno (no lleva topes/regímenes/vigencia). Para la **inferencia fiscal** se usa el `CountryRuleSet` + `VaultRuleService`, no este JSON.
+
+> **Requerimiento de CI (obligatorio):** cualquier cambio en la **estructura del motor** (p. ej. `KNOWLEDGE_SCHEMA`, `toKnowledgeSchema`, la forma de las reglas/aristas) exige **regenerar y versionar** el esquema: corre `npm run generate-schema` y **commitea** `docs/knowledge-schema.json` en el mismo cambio. El job `vault-gate` lo verifica (`generate-schema` + `git diff --exit-code`); si el esquema quedó desincronizado, el pipeline **falla** y bloquea el deploy.
+
+## Technical Debt / Future Improvements
+
+Deuda técnica conocida y diferida **a propósito** (decisión registrada, no olvido). No abordar sin un caso de uso real que lo justifique.
+
+| # | Deuda | Estado / Razón | Disparador para refactorizar |
+|---|---|---|---|
+| TD-1 | **El parser de Pseudocódigo de Grafo no separa `Nodo:Etiqueta`.** `parseGraphPseudocode` (`backend/src/lib/knowledge-engine.js`) guarda el texto completo del nodo (p. ej. `"Gasto:Gasto"`) como `subject`/`object`, sin dividir entidad y etiqueta. | **Diferida (Postel's Law).** El parser es deliberadamente tolerante; el formato estricto se enforce en la curaduría (`CURATION_PROMPT.md`), no en la lectura. Prioridad actual: motor **funcional** con el formato vigente. | El **primer caso de uso real de consulta compleja** que necesite filtrar/recorrer por etiqueta de nodo. Entonces: extraer `entidad` y `etiqueta` por separado en `GraphEdge` (+ tests). |
+
+> Al cerrar una deuda, mover la fila a un changelog/commit y actualizar los tests correspondientes.
