@@ -1,0 +1,42 @@
+{
+  "_status": "ACTIVO — bóveda en el repo (./knowledge-base). Ruta relativa portable: vale en local y en el servidor del cliente.",
+  "vaultPath": "./knowledge-base",
+  "vaultPathNote": "Ruta RELATIVA a la raíz del proyecto. El backend la resuelve a absoluta vía KNOWLEDGE_BASE_PATH (config.knowledgeBase.root). No usar rutas absolutas: rompen la portabilidad entre máquinas.",
+  "syncMode": "bidirectional",
+  "identityKey": "id (UUID en frontmatter) — NUNCA el nombre de archivo",
+  "conflictPolicy": "vault-wins",
+  "structure": {
+    "countries/<ISO-2>": "Reglas fiscales específicas de una jurisdicción (p. ej. countries/MX, countries/CO).",
+    "global": "Conocimiento transversal a jurisdicciones (entidades, flujos, conceptos)."
+  },
+  "sourcesOfTruth": [
+    {
+      "folder": "countries/MX",
+      "domain": "normas + reglas-deducibilidad (MX)",
+      "authoritative": true,
+      "mapsTo": "Neo4j :Norma / :Criterio + backend/seed/normas_titulo_ii.json + relación APLICA_A (tope_monto/tope_pct/condicion)",
+      "_note": "Cada norma/criterio/deducción = 1 nota .md con frontmatter (id, clave, vigente_desde/hasta, fuente_url, source_version). Provider: MXLegalProvider (registrado)."
+    },
+    {
+      "folder": "countries/CO",
+      "domain": "normas + reglas-deducibilidad (CO)",
+      "authoritative": true,
+      "mapsTo": "(pendiente) COLegalProvider — aún no registrado en backend/src/lib/legal/sources/index.js",
+      "_note": "Scaffold. Activar creando y registrando el provider de Colombia antes de poblar notas."
+    },
+    {
+      "folder": "global",
+      "domain": "entidades-flujos",
+      "authoritative": true,
+      "mapsTo": ".claude/memory/BUSINESS_LOGIC.md (§2 Entidades, §3 Flujos)"
+    }
+  ],
+  "goldenRule": "Todo cambio de código que afecte una regla fiscal actualiza la nota de la bóveda correspondiente — y viceversa. Una tarea no está 'Terminada' si código y bóveda no coinciden. Ver memoria 'obsidian-code-bidirectional-sync'.",
+  "auditTargets": [
+    {
+      "code": "backend/prisma/schema.prisma",
+      "vaultFolder": "countries/MX",
+      "_note": "Auditoría de coherencia código↔bóveda (deducciones MX)."
+    }
+  ]
+}

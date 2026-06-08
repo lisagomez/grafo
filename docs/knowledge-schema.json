@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grafo.local/schemas/knowledge-schema.json",
+  "title": "KnowledgeSchema",
+  "description": "Salida estándar de intercambio del knowledge-engine (backend/src/lib/knowledge-engine.js → toKnowledgeSchema). Formato genérico que cualquier motor de reglas puede consumir. NOTA: es intencionalmente más simple que el modelo interno (no incluye topes/regímenes/vigencia); para la inferencia fiscal se usa el CountryRuleSet + VaultRuleService.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "metadata",
+    "rules",
+    "warnings"
+  ],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country",
+        "engine_version"
+      ],
+      "properties": {
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "Código de país ISO-2 en mayúsculas."
+        },
+        "engine_version": {
+          "type": "string",
+          "description": "Versión semver del esquema/engine que produjo este JSON."
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "edges",
+          "line_number"
+        ],
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Identidad estable de la regla (UUID). null si la nota no la declara."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Descripción legible (Regla Lógica / Contexto Legal)."
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "subject",
+                "predicate",
+                "effect",
+                "object"
+              ],
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "description": "Nodo origen."
+                },
+                "predicate": {
+                  "type": "string",
+                  "description": "Relación (p. ej. ES_DEDUCIBLE_SI)."
+                },
+                "effect": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "DEDUCIBLE",
+                    "NO_DEDUCIBLE",
+                    null
+                  ],
+                  "description": "Veredicto que implica la relación; null si no se reconoce."
+                },
+                "object": {
+                  "type": "string",
+                  "description": "Nodo destino."
+                }
+              }
+            }
+          },
+          "line_number": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Línea (1-based) de origen en la nota, para rastreo. null si no hay aristas."
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Errores no bloqueantes detectados durante el parseo."
+    }
+  }
+}
