@@ -11,6 +11,7 @@ description: |
   formatea esta reforma/decreto/ley, curación previa, manifiesto de cambio, pre-curación.
 argument-hint: "<ISO-2> <ruta-al-texto-legal | texto pegado | URL>  (p. ej. MX ./tmp/reforma-isr-2026.txt)"
 user-invocable: true
+model: sonnet
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 license: MIT
 ---
@@ -34,14 +35,59 @@ manifiesto que dice exactamente **dónde poner el ojo** en la revisión.
 
 ### 0. Preflight (obligatorio)
 - Lee [`.claude/memory/BUSINESS_LOGIC.md`](../../memory/BUSINESS_LOGIC.md) — sin esto, no escribas reglas.
+- Lee [`references/rules.md`](references/rules.md) — los criterios del **vault-gate** que toda nota debe cumplir **desde que se cura**, no después.
 - Resuelve `<ISO-2>` desde `$ARGUMENTS` (mayúsculas). Si falta, pregunta — no asumas país.
 - Obtén el texto legal bruto: ruta de archivo (`Read`), texto pegado en la conversación, o URL (`WebFetch`). Registra la fuente oficial (`fuente_url`) — si la fuente no es oficial/verificable, dilo en el manifiesto.
 - Asegura que existan `./knowledge-base/countries/<ISO-2>/deducciones/` y `./knowledge-base/countries/<ISO-2>/manifiestos/`.
 
-### 1. Curaduría automática (formato probado)
-- Carga y **sigue al pie de la letra** [`CURATION_PROMPT.md`](../sync-country-knowledge/references/CURATION_PROMPT.md) (fuente única, compartido con `/sync-country-knowledge` — no dupliques el prompt): extracción de entidades → relaciones `ES_DEDUCIBLE_SI` / `NO_ES_DEDUCIBLE_SI` → nota Markdown con Contexto Legal + Regla Lógica + Pseudocódigo de Grafo.
-- Respeta el **Formato Estricto**: `(Nodo:Etiqueta) -[RELACION]-> (Nodo:Etiqueta)`, sin espacios dentro de paréntesis/corchetes. Toda línea que no cumpla se omite y se reporta en el manifiesto.
-- Una nota por regla, en `./knowledge-base/countries/<ISO-2>/deducciones/`.
+### 1. Curaduría automática (prompt probado)
+
+Actúa como un experto en arquitectura fiscal y grafos de conocimiento. Tu tarea es procesar
+documentos legales crudos y transformarlos en Reglas de Grafo de Conocimiento para el sistema
+fiscal. Sigue este proceso riguroso:
+
+**Extracción de Entidades:** Identifica los sujetos (contribuyente, autoridad), los objetos
+(gasto, factura, deducción) y los eventos (fecha, monto, actividad).
+
+**Definición de Relaciones:** Define las reglas de deducibilidad como relaciones lógicas:
+
+```
+(Gasto) -[ES_DEDUCIBLE_SI]-> (Cumple_Requisito)
+(Gasto) -[NO_ES_DEDUCIBLE_SI]-> (Incumple_Requisito)
+```
+
+**Estructuración:** Genera un archivo en formato Markdown dentro de
+`./knowledge-base/countries/{ISO}/deducciones/` que siga este esquema:
+
+- **Frontmatter (metadatos):** bloque YAML al inicio con:
+  - `id` — UUID estable (identidad de la regla; nunca el nombre de archivo).
+  - `clave` — concepto de gasto del catálogo controlado (p. ej. `VIATICOS`).
+  - `regimen` — **infiere y asigna el régimen fiscal** al que aplica la regla (p. ej. `PM_TITULO_II`).
+    Si aplica a varios, usa `regimenes: [REG_A, REG_B]`. **Obligatorio**: el motor empareja las
+    consultas por régimen; una regla sin régimen es inerte (nunca se aplica).
+  - `vigente_desde` / `vigente_hasta` — vigencia (`null` = vigente).
+  - `fuente_url` — URL de la fuente oficial.
+  - `source_version` — versión de la base de conocimiento citada en el dictamen.
+- **Contexto Legal:** Referencia al artículo o ley oficial.
+- **Regla Lógica:** Explicación en lenguaje natural.
+- **Pseudocódigo de Grafo:** La estructura que el motor debe seguir para validar el gasto.
+
+**Verificación de Integridad:** Antes de guardar, asegúrate de que la regla no contradiga las
+reglas ya existentes en `global/`.
+
+**Formato:** Todo debe ser legible para un humano (el contador) y para una máquina (el motor de grafos).
+
+**Formato Estricto:** Al generar el Pseudocódigo de Grafo, usa SIEMPRE la sintaxis
+`(Nodo:Etiqueta) -[RELACION]-> (Nodo:Etiqueta)`.
+- No uses espacios dentro de los paréntesis o corchetes.
+- Usa `ES_DEDUCIBLE_SI` para condiciones positivas.
+- Usa `NO_ES_DEDUCIBLE_SI` para condiciones negativas.
+- Cualquier línea que no siga este formato exacto debe ser omitida o marcada como error.
+
+> Origen: `CURATION_PROMPT.md` de `/sync-country-knowledge` (copiado aquí por requisito de
+> autonomía del skill). Si aquel cambia, sincroniza esta sección.
+> Además del prompt, cada nota debe cumplir [`references/rules.md`](references/rules.md)
+> (criterios mecánicos del vault-gate) — una nota por regla.
 
 ### 2. Identidad y estado del borrador
 Antes de escribir cada nota, busca contraparte existente en `deducciones/` del país (empareja por `clave` + régimen, identidad final por `id` UUID):
@@ -68,7 +114,7 @@ usando [`references/MANIFIESTO_TEMPLATE.md`](references/MANIFIESTO_TEMPLATE.md).
 Reglas del manifiesto:
 - Cada 🚩 lleva: regla (`id`, `clave`, archivo), **qué cálculo se ve afectado y cómo** (antes → después), artículo/fuente exacta, y la pregunta concreta que el revisor humano debe responder.
 - En caso de duda entre dos niveles, **escala al más alto**. Falsos rojos son baratos; falsos verdes son caros.
-- Incluye también: líneas de pseudocódigo descartadas por formato, fuentes no verificables, y cualquier contradicción detectada contra `./knowledge-base/global/` (verificación de integridad del CURATION_PROMPT).
+- Incluye también: líneas de pseudocódigo descartadas por formato, fuentes no verificables, y cualquier contradicción detectada contra `./knowledge-base/global/` (verificación de integridad del prompt de curaduría).
 
 ### 4. Validar y reportar
 - Corre el gate de la bóveda desde `backend/`: `npm run audit:vault` — exit **0** obligatorio. Si falla, corrige el formato de los borradores antes de terminar (nunca dejes la bóveda en rojo).
@@ -86,7 +132,7 @@ texto legal bruto → /pre-curator (borradores + manifiesto) → REVISIÓN HUMAN
 
 ## Referencias
 
-- [`CURATION_PROMPT.md`](../sync-country-knowledge/references/CURATION_PROMPT.md) — **fuente única** del formato de curaduría (vive en `/sync-country-knowledge`).
+- [`references/rules.md`](references/rules.md) — criterios de validación del **vault-gate** (`npm run audit:vault`): lo que el parser del motor exige a cada nota. Respetar **durante** la curaduría.
 - [`references/MANIFIESTO_TEMPLATE.md`](references/MANIFIESTO_TEMPLATE.md) — plantilla del Manifiesto de Cambio.
 - [`.claude/memory/BUSINESS_LOGIC.md`](../../memory/BUSINESS_LOGIC.md) — lógica fiscal de dominio (lectura obligatoria).
 - `backend/src/lib/knowledge-engine.js` — parser real de las notas (frontmatter llano + Pseudocódigo de Grafo); los borradores deben pasar su validación (`npm run audit:vault`).
