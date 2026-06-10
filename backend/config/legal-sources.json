@@ -1,0 +1,46 @@
+{
+  "MX": {
+    "baseUrl": "https://www.dof.gob.mx",
+    "selector": "main",
+    "fuentes": [
+      {
+        "clave": "DOF_NOTA",
+        "path": "/nota_detalle.php",
+        "selector": "#DivDetalleNota",
+        "tipo": "LEY",
+        "oficial": true,
+        "descripcion": "Notas del Diario Oficial de la Federación (decretos/reformas; añadir query ?codigo=...&fecha=... al extraer)"
+      },
+      {
+        "clave": "CRITERIOS_SAT",
+        "path": "https://www.sat.gob.mx/normatividad/criterios-normativos",
+        "selector": "main article",
+        "tipo": "CRITERIO",
+        "oficial": true,
+        "descripcion": "Criterios Normativos del SAT (path absoluto: dominio distinto al baseUrl del país)"
+      }
+    ]
+  },
+  "CO": {
+    "baseUrl": "https://www.dian.gov.co",
+    "selector": "main",
+    "fuentes": [
+      {
+        "clave": "DIAN_NORMATIVIDAD",
+        "path": "/normatividad/Paginas/default.aspx",
+        "selector": "#contenido",
+        "tipo": "CRITERIO",
+        "oficial": true,
+        "descripcion": "Portal de normatividad de la DIAN (scaffold: ajustar selector al validar el portal real)"
+      },
+      {
+        "clave": "ESTATUTO_TRIBUTARIO",
+        "path": "https://estatuto.co/",
+        "selector": "article",
+        "tipo": "LEY",
+        "oficial": false,
+        "descripcion": "Estatuto Tributario (fuente de consulta, NO oficial: el dictamen debe citarla como tal)"
+      }
+    ]
+  }
+}

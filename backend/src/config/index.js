@@ -14,6 +14,7 @@ dotenv.config();
 // del cwd desde el que se ejecute el proceso.
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const knowledgeBaseRelative = process.env.KNOWLEDGE_BASE_PATH || './knowledge-base';
+const legalSourcesRelative = process.env.LEGAL_SOURCES_CONFIG_PATH || './backend/config/legal-sources.json';
 
 export const config = {
   // Environment
@@ -48,6 +49,13 @@ export const config = {
     root: path.resolve(projectRoot, knowledgeBaseRelative),
     countriesDir: path.resolve(projectRoot, knowledgeBaseRelative, 'countries'),
     globalDir: path.resolve(projectRoot, knowledgeBaseRelative, 'global'),
+  },
+
+  // Configuración agnóstica de extracción de fuentes legales (país como dato:
+  // baseUrl + selector CSS por fuente; el extractor no conoce países concretos).
+  legalSources: {
+    path: legalSourcesRelative,
+    configPath: path.resolve(projectRoot, legalSourcesRelative),
   },
 
   // Redis

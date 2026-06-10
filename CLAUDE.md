@@ -44,6 +44,7 @@ Cuándo consultar qué, antes de escribir código:
 | `npm run test:vault-inference` | Dictamen del motor **sobre datos de la bóveda** (vault → `VaultRuleService` → motor). |
 | `npm run audit:vault` | **Gate de la bóveda**: bloquea (exit 1) si hay notas mal formadas; un país vacío es informativo (exit 0). |
 | `npm run export:knowledge -- <iso>` | **Exporta** el conocimiento de un país al formato estándar → `out/knowledge/<ISO>.json`. |
+| `npm run extract:legal -- <iso> [clave]` | **Extracción agnóstica de fuentes legales** dirigida por `backend/config/legal-sources.json` (baseUrl + selector CSS por país/fuente) → `out/extraction/<ISO>/<CLAVE>.txt` (insumo de `/pre-curator`). `--list` muestra lo configurado. Exit 1 si alguna fuente falla. |
 | `npm run generate-schema` | Regenera `docs/knowledge-schema.json` desde `KNOWLEDGE_SCHEMA` (fuente única). |
 
 > Correr `node scripts/audit.js` tras cada seed/ingesta y **antes** de confiar en la inferencia (ver Fase 1.5 del PRP-01).

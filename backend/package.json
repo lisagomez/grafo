@@ -15,6 +15,7 @@
     "generate-schema": "node scripts/generate-schema.js",
     "audit": "node scripts/audit.js",
     "audit:vault": "node scripts/audit-vault.js",
+    "extract:legal": "node scripts/extract-legal.js",
     "stress:audit": "node scripts/stress-audit.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@prisma/client": "^5.9.1",
     "bcryptjs": "^2.4.3",
+    "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
