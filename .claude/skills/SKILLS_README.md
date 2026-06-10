@@ -29,6 +29,7 @@
 | `image-generation` | `/image-generation` | Generar/editar imagenes con OpenRouter + Gemini |
 | `autoresearch` | `/autoresearch [skill]` | Auto-optimizar skills con loop autonomo (Karpathy) |
 | `pre-curator` | `/pre-curator <ISO-2> <fuente>` | Pre-curacion de texto legal bruto → borradores de boveda + Manifiesto de Cambio con Riesgo Legal Estimado (🚩 si afecta calculo de impuestos) |
+| `user-communicator` | `/user-communicator [reporte]` | Capa final de comunicacion: traduce todo reporte al tono del usuario (references/tone.md) antes de entregarlo; encadenada al PASO 5 del bucle-agentico |
 
 ### Invocables por Claude (automaticos)
 

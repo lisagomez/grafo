@@ -171,12 +171,33 @@ El conocimiento persiste. El mismo error NUNCA ocurre dos veces en este proyecto
 
 Repetir hasta completar todas las fases.
 
-### PASO 5: VALIDACION FINAL
+### PASO 5: VALIDACION FINAL Y SINTESIS
 
 - Testing end-to-end del sistema completo
 - Validacion visual con Playwright si aplica
 - Confirmar que el problema ORIGINAL esta resuelto
 - Reportar al usuario que se construyo
+
+**Encadenamiento OBLIGATORIO con `user-communicator`:**
+
+```
+Agente Investigador termina          Agente de Sintesis
+(mapeo PASO 2 + ejecucion PASO 3-4)  (redacta el reporte final crudo)
+            |                                  |
+            +----------------+-----------------+
+                             |
+              Skill `user-communicator`
+              (traduce el reporte segun references/tone.md)
+                             |
+                  Reporte que VE el usuario
+```
+
+- Cuando el Agente Investigador termina, el Agente de Sintesis NO entrega el reporte
+  crudo: invoca el skill `user-communicator` (Skill tool) para traducirlo ANTES de que
+  el usuario lo vea.
+- La traduccion es de FORMA, no de fondo: cifras, errores, warnings y pendientes pasan
+  intactos (reglas duras en `user-communicator/SKILL.md`).
+- Aplica tambien a reportes intermedios de cierre de fase si se le muestran al usuario.
 
 ---
 
