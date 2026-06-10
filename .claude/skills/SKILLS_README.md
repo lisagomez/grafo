@@ -28,6 +28,7 @@
 | `memory-manager` | `/memory-manager` | Memoria persistente por proyecto (reemplaza auto-memory) |
 | `image-generation` | `/image-generation` | Generar/editar imagenes con OpenRouter + Gemini |
 | `autoresearch` | `/autoresearch [skill]` | Auto-optimizar skills con loop autonomo (Karpathy) |
+| `pre-curator` | `/pre-curator <ISO-2> <fuente>` | Pre-curacion de texto legal bruto → borradores de boveda + Manifiesto de Cambio con Riesgo Legal Estimado (🚩 si afecta calculo de impuestos) |
 
 ### Invocables por Claude (automaticos)
 
