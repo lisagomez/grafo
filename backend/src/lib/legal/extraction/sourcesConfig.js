@@ -44,12 +44,14 @@ const FuenteExtraccionSchema = z.object({
   tipo: z.enum(['LEY', 'CODIGO', 'CRITERIO']).optional(),
   oficial: z.boolean().default(true),
   descripcion: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 const PaisExtraccionSchema = z
   .object({
     baseUrl: z.string().url(),
     selector: z.string().min(1).optional(),
+    headers: z.record(z.string(), z.string()).optional(),
     fuentes: z.array(FuenteExtraccionSchema).min(1),
   })
   .superRefine((pais, ctx) => {
@@ -95,10 +97,13 @@ export async function loadLegalSourcesConfig(configPath = config.legalSources.co
  * `new URL(path, baseUrl)` respeta paths absolutos (otro dominio) y relativos,
  * sin concatenación manual de strings.
  *
+ * Los `headers` HTTP se fusionan: los de la fuente pisan los del país (varios
+ * portales gubernamentales rechazan requests sin User-Agent reconocible).
+ *
  * @param {LegalSourcesConfig} cfg
  * @param {string} iso    Código ISO-2 (insensible a mayúsculas).
  * @param {string} clave  Clave de la fuente dentro del país.
- * @returns {{ url: string, selector: string, fuente: FuenteExtraccion, pais: string }}
+ * @returns {{ url: string, selector: string, headers: Record<string,string>, fuente: FuenteExtraccion, pais: string }}
  * @throws {Error} si el país o la clave no existen en la configuración.
  */
 export function resolveFuente(cfg, iso, clave) {
@@ -120,6 +125,7 @@ export function resolveFuente(cfg, iso, clave) {
   return {
     url: new URL(fuente.path, paisCfg.baseUrl).href,
     selector: fuente.selector ?? paisCfg.selector,
+    headers: { ...paisCfg.headers, ...fuente.headers },
     fuente,
     pais,
   };

@@ -22,24 +22,23 @@
     ]
   },
   "CO": {
-    "baseUrl": "https://www.dian.gov.co",
-    "selector": "main",
+    "baseUrl": "https://normograma.dian.gov.co",
+    "selector": "main.contenido",
     "fuentes": [
       {
-        "clave": "DIAN_NORMATIVIDAD",
-        "path": "/normatividad/Paginas/default.aspx",
-        "selector": "#contenido",
+        "clave": "DIAN_NORMOGRAMA",
+        "path": "/dian/compilacion/docs/resolucion_dian_0227_2025.htm",
         "tipo": "CRITERIO",
         "oficial": true,
-        "descripcion": "Portal de normatividad de la DIAN (scaffold: ajustar selector al validar el portal real)"
+        "descripcion": "Compilación Jurídica DIAN; URL patrón docs/<tipo>_dian_<num>_<año>.htm — sustituir el path por el documento objetivo"
       },
       {
-        "clave": "ESTATUTO_TRIBUTARIO",
-        "path": "https://estatuto.co/",
-        "selector": "article",
+        "clave": "ET_SENADO",
+        "path": "http://www.secretariasenado.gov.co/senado/basedoc/estatuto_tributario.html",
+        "selector": "#aj_data",
         "tipo": "LEY",
-        "oficial": false,
-        "descripcion": "Estatuto Tributario (fuente de consulta, NO oficial: el dictamen debe citarla como tal)"
+        "oficial": true,
+        "descripcion": "Estatuto Tributario con vigencia expresa (Senado); paginado en estatuto_tributario_prNNN.html; encoding ISO-8859-1"
       }
     ]
   }

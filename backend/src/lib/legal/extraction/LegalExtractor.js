@@ -18,6 +18,16 @@ import * as cheerio from 'cheerio';
 import { loadLegalSourcesConfig, resolveFuente } from './sourcesConfig.js';
 
 /**
+ * Headers por defecto: varios portales gubernamentales devuelven 403 al
+ * User-Agent vacío de Node. Nos identificamos honestamente como extractor;
+ * la configuración puede sobreescribirlo por país o por fuente (`headers`).
+ * @type {Record<string, string>}
+ */
+const DEFAULT_HEADERS = {
+  'user-agent': 'Mozilla/5.0 (compatible; GrafoLegalExtractor/1.0)',
+};
+
+/**
  * Resultado de extraer una fuente legal.
  * @typedef {Object} ExtractionResult
  * @property {boolean} ok          true si se obtuvo contenido con el selector.
@@ -84,7 +94,7 @@ export class LegalExtractor {
    * @throws {Error} solo por configuración inválida (país/clave inexistentes).
    */
   async extract(iso, clave) {
-    const { url, selector, fuente, pais } = resolveFuente(this.config, iso, clave);
+    const { url, selector, headers, fuente, pais } = resolveFuente(this.config, iso, clave);
 
     /** @type {ExtractionResult} */
     const result = {
@@ -101,7 +111,7 @@ export class LegalExtractor {
 
     let response;
     try {
-      response = await this.fetchFn(url);
+      response = await this.fetchFn(url, { headers: { ...DEFAULT_HEADERS, ...headers } });
     } catch (err) {
       result.warnings.push(`fallo de red al consultar ${url}: ${err.message}`);
       return result;

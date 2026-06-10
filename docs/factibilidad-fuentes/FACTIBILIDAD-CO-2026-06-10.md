@@ -21,7 +21,7 @@ estado: pendiente-confirmacion
 | Normograma DIAN (doctrina/resoluciones) | Sí | Baja | ✓ |
 | SUIN-Juriscol (MinJusticia) | Sí | Alta | ✗ (diferir a Fase 8: TLS roto) |
 | dian.gov.co/normatividad (scaffold actual) | Sí | Alta | ✗ (SharePoint + documentos en PDF) |
-| estatuto.co (scaffold actual) | No | Media | ✓ (solo como respaldo, selector corregido) |
+| estatuto.co (scaffold actual) | No | Alta | ✗ (Cloudflare challenge anti-bot; verificado en sonda real) |
 
 ## Fuente: http://www.secretariasenado.gov.co/senado/basedoc/estatuto_tributario.html
 
@@ -68,8 +68,11 @@ estado: pendiente-confirmacion
   el portal es **SharePoint** (clases `ms-*`); **no existe** ningún `#contenido` en el HTML real, y los
   documentos finales son **PDF** → dificultad Alta. **Reemplazar por el normograma.**
 - `ESTATUTO_TRIBUTARIO` → `https://estatuto.co/`, selector `article`: **no existe** ningún `<article>`
-  en el HTML real (constructor Oxygen; el contenedor es `main#main`). Fuente de consulta (no oficial),
-  útil solo como respaldo con el selector corregido.
+  en el HTML real (constructor Oxygen; el contenedor es `main#main`). Además, en la sonda real
+  (2026-06-10) el sitio respondió **403 con `cf-mitigated: challenge`** (Cloudflare anti-bot por
+  fingerprint TLS): bloquea el `fetch` de Node aunque acepte curl. **Descartada** — saltarse un
+  challenge anti-bot no es un camino aceptable, y siendo fuente de consulta no oficial, las dos
+  fuentes oficiales la hacen innecesaria.
 
 ## Bloque candidato para legal-sources.json
 
@@ -92,23 +95,19 @@ estado: pendiente-confirmacion
       "tipo": "LEY",
       "oficial": true,
       "descripcion": "Estatuto Tributario con vigencia expresa (Senado); paginado en estatuto_tributario_prNNN.html; encoding ISO-8859-1"
-    },
-    {
-      "clave": "ESTATUTO_CONSULTA",
-      "path": "https://estatuto.co/",
-      "selector": "#main",
-      "tipo": "LEY",
-      "oficial": false,
-      "descripcion": "Estatuto Tributario (fuente de consulta, NO oficial; respaldo)"
     }
   ]
 }
 ```
 
+> **Aplicado el 2026-06-10** con sonda real en verde (2/2 fuentes, exit 0). El bloque original
+> incluía estatuto.co como respaldo; se retiró tras detectar el challenge de Cloudflare.
+
 ## Diferidas a Fase 8 (lector especializado)
 
 - https://www.suin-juriscol.gov.co — certificado TLS inválido (estructura limpia; reevaluar si lo arreglan).
 - https://www.dian.gov.co/normatividad — resoluciones recientes solo en PDF (`/normatividad/Normatividad/*.pdf`).
+- https://estatuto.co — Cloudflare challenge anti-bot (no oficial; innecesaria teniendo ET_SENADO).
 
 ## Próximo paso
 

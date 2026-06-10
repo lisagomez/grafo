@@ -179,6 +179,42 @@ describe('LegalExtractor', () => {
     );
   });
 
+  test('envía un User-Agent identificable por defecto', async () => {
+    let seenHeaders;
+    const ex = new LegalExtractor({
+      config: CFG,
+      fetchFn: async (url, opts) => {
+        seenHeaders = opts.headers;
+        return fetchStub(HTML_FIXTURE)();
+      },
+    });
+    await ex.extract('MX', 'LISR_HTML');
+
+    assert.match(seenHeaders['user-agent'], /GrafoLegalExtractor/);
+  });
+
+  test('los headers de la configuración pisan el default (fuente > país > default)', async () => {
+    const cfg = {
+      MX: {
+        ...CFG.MX,
+        headers: { 'user-agent': 'UA-pais', 'x-pais': 'mx' },
+        fuentes: [{ ...CFG.MX.fuentes[0], headers: { 'user-agent': 'UA-fuente' } }],
+      },
+    };
+    let seenHeaders;
+    const ex = new LegalExtractor({
+      config: cfg,
+      fetchFn: async (url, opts) => {
+        seenHeaders = opts.headers;
+        return fetchStub(HTML_FIXTURE)();
+      },
+    });
+    await ex.extract('MX', 'LISR_HTML');
+
+    assert.equal(seenHeaders['user-agent'], 'UA-fuente');
+    assert.equal(seenHeaders['x-pais'], 'mx');
+  });
+
   test('el extractor es agnóstico: país nuevo = solo configuración, cero código', async () => {
     const cfgConPaisNuevo = {
       ...CFG,
