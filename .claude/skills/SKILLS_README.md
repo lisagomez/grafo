@@ -30,6 +30,7 @@
 | `autoresearch` | `/autoresearch [skill]` | Auto-optimizar skills con loop autonomo (Karpathy) |
 | `pre-curator` | `/pre-curator <ISO-2> <fuente>` | Pre-curacion de texto legal bruto → borradores de boveda + Manifiesto de Cambio con Riesgo Legal Estimado (🚩 si afecta calculo de impuestos) |
 | `user-communicator` | `/user-communicator [reporte]` | Capa final de comunicacion: traduce todo reporte al tono del usuario (references/tone.md) antes de entregarlo; encadenada al PASO 5 del bucle-agentico |
+| `source-finder` | `/source-finder <pais> [tema]` | Reconocimiento de portales legales: busca la fuente (oficial primero), entiende su estructura y genera Reporte de Factibilidad (dificultad Baja/Media/Alta) que alimenta legal-sources.json |
 
 ### Invocables por Claude (automaticos)
 
